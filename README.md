@@ -1,9 +1,17 @@
-# mind.lua, a (very) small plugin for note taking workflows
+# mind.lua, a (very) small plugin for notetaking and task workflows
 
-This plugin provides a very simple plugin for note taking:
+This plugin provides a very simple plugin for note taking and task management:
 
-- Create new notes by giving them a name.
-- Browse and jump to the notes by fuzzy searching them.
+- Notes:
+  - Create new notes by giving them a name.
+  - Browse and jump to the notes by fuzzy searching them.
+- Journal:
+  - Access the daily journal easily.
+  - Browse and jump to the previous journal entries by fuzzy searching them.
+- Task managemente:
+  - Create new TODO, WIP or DONE tasks.
+  - Browse and jump categories of tasks (TODO, WIP and DONE).
+  - Move task between TODO, WIP an DONE category.
 
 ## Dependencies
 
@@ -37,16 +45,30 @@ use {
 
 The current API contains two functions:
 
-- `mind.open_node()`: open a note by fuzzy searching it.
-- `mind.create_node()`: prompt the user to enter a new node name and start editing it.
+- `mind.open_note()`: open a note by fuzzy searching it.
+- `mind.new_note()`: prompt the user to enter a new node name and start editing it.
+- `mind.open_journal()`: open a journal entry by fuzzy searching it.
+- `mind.open_daily()`: automatically jump to the daily journal entry.
+- `mind.open_todo()`: open a TODO by fuzzy searching it.
+- `mind.new_todo()`: create a new TODO entry.
+- `mind.open_wip()`: open a WIP by fuzzy searching it.
+- `mind.new_wip()`: create a new WIP entry.
+- `mind.open_done()`: open a DONE by fuzzy searching it.
+- `mind.new_done()`: create a new DONE entry.
 
 ## Customizing the notes directory
 
 By default, this plugin uses the `~/mind` directory. You can change this setting by passing the directory to the `setup`
-function via the `node_dir` key:
+function via the `dir` key:
 
 ```lua
 require'mind'.setup {
-  node_dir = '~/notes'
+  dir = {
+    notes = "~/mind/notes",
+    journal = "~/mind/journal",
+    todo = "~/mind/tasks/todo",
+    wip = "~/mind/tasks/wip",
+    done = "~/mind/tasks/done",
+  }
 }
 ```
