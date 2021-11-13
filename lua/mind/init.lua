@@ -94,7 +94,7 @@ function M.open_journal()
 end
 
 function M.open_daily()
-  local today = vim.fn.strftime('%Y%M%d')
+  local today = vim.fn.strftime('%Y%m%d')
   local p = string.format('%s/%s.md', config.dir.journal, today)
 
   vim.cmd(string.format(':e %s', p))
