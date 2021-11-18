@@ -54,6 +54,14 @@ local function open_node(dir, prompt)
   }):find()
 end
 
+-- Sanitize a node name.
+--
+-- This is important to remove things like /, for instance.
+local function sanitize_node_name(name)
+  local n = name:gsub('/', '_')
+  return n
+end
+
 local function new_node(dir, prompt)
   local node_name = vim.fn.input(prompt)
 
@@ -61,7 +69,7 @@ local function new_node(dir, prompt)
     return
   end
 
-  node_name = dir .. '/' .. node_name
+  node_name = dir .. '/' .. sanitize_node_name(node_name)
 
   if not string.match(node_name, '.md$') then
     node_name = node_name .. '.md'
