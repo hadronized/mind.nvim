@@ -1,113 +1,76 @@
-# mind.lua, a (very) small plugin for notetaking and task workflows
+# mind.lua, a plugin for notetaking and task workflows
+
+This plugin is a new take on note taking and task workflows. The idea is derived from using several famous plugins, such
+as [org-mode] or even standalone applications, like [Notion].
 
 <!-- vim-markdown-toc GFM -->
 
-* [Features](#features)
-* [Dependencies](#dependencies)
-* [Getting started](#getting-started)
-  * [Install](#install)
-  * [Customizing the notes directory](#customizing-the-notes-directory)
-  * [Keybindings](#keybindings)
-* [Lua API](#lua-api)
+* [Presentation](#presentation)
 
 <!-- vim-markdown-toc -->
 
-# Features
+# Presentation
 
-This plugin provides a very simple plugin for note taking and task management:
+The plugin is based on a simple concept yet powerful one: trees. A tree is a special kind of graph. In that graph, every
+node can have as many children as they want, and there is only one parent for each children. The graph holds itself
+completely with the root node, which has the children nodes making the rest of the graph.
 
-- Notes:
-  - Create new notes by giving them a name.
-  - Browse and jump to the notes by fuzzy searching them.
-- Journal:
-  - Access the daily journal easily.
-  - Browse and jump to the previous journal entries by fuzzy searching them.
-- Task managemente:
-  - Create new TODO, WIP or DONE tasks.
-  - Browse and jump categories of tasks (TODO, WIP and DONE).
-  - Move task between TODO, WIP an DONE category.
+That concept is really powerful because it can be applied to almost everything in life. A list is a flat graph (with
+depth = 1). A software project could be seen as a graph, where the top node is the project itself, and sub-projects are
+children nodes. At a deep enough stage, you find code files, and you can still imagine that those files have children
+(the actual code AST), etc. etc.
 
-# Dependencies
+Ideas, notes, tasks, etc. can also be imagined as being part of such a graph. We have a natural tendency to want to tidy
+things by classifying them. For instance, you might have two ideas that both belong to “Infrastructure”, and you also
+have a couple of meeting notes that could be put in a “Meeting” node.
 
-This plugin requires the following Lua plugins to be installed:
+This plugin generalizes the concept of graph to allow people to create mind graphs. A mind graph has the following
+properties:
 
-- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
-- [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+- Each node is either a tree or a leaf.
+- A tree has a name and from 0 to many children.
+- A leaf has a name and is either a file or a special mind object. More on that later.
 
-# Getting started
+Any kind of node has a _path_ in the mind tree. That path is simply the concatenation of its transitive parents’ names
+with its own name. For instance, in the following tree:
 
-## Install
-
-With [packer](https://github.com/wbthomason/packer.nvim):
-
-```lua
-use 'phaazon/mind.nvim'
+```
+v a
+  > b
+  v c
+    > e
+  > d
 ```
 
-Setup by calling the `setup` function in any of your `.lua` files:
+`a`’s path is `/a`, `b`’s path is `/a/b` and `e`’s path is `/a/c/e`.
 
-```lua
-use {
-  'phaazon/mind.nvim',
-  config = function()
-    require'mind'.setup()
-  end
-}
+As said earlier, leaves can be different things. A file leaf is simply a node that points to a file. The name of the file
+is a unique name and is not related to its node name. Hence, file name are automatically generated, and the files don’t
+have to follow a tree-like structure (we actually don’t really care about that property).
+
+A leaf can also be a functional node. Functional nodes are nodes that compute their names and content on the fly, when
+we try to expand them. For instance, we could imagine a functional node at `/Journal/Today` that would compute the
+current date and would return the node at the path `/Journal/{year}/{month}/{day}`. If that node doesn’t exist, it would
+create it, insert it in the tree and return it.
+
+Functional nodes allow to build more complex workflows, such as `/Tasks/Critical`, that would get all the current tasks,
+filter them by criticical state and would build a node with only those tasks. That last point leads us to the last kind
+of node: link nodes.
+
+A link node is simply a node that points to another one. In that sense, a link node simply has a name, and its content
+is simply a path. Link nodes do not point to files; only other nodes.
+
+Because people will want to generate links for note taking, it’s important to provide some functions to automatically
+generate links. Imagine you have opened a file node at `/Notes/Technical/Language/Rust` and you want to reference
+`/Notes/Technical/Language/C`. Instead of manually looking for the associated file, all you have to do is to call the
+function that will automatically pick the file name for you. That’s pretty simple: you give it the path, it gives back
+the file name and insert it (it could support Markdown by default). The link would be something like:
+
+```markdown
+[description of the link](/some/path/id-of-the-node)
 ```
 
-## Customizing the notes directory
+A function could be provided to migrate links automatically if the prefix changes.
 
-By default, this plugin uses the `~/mind` directory. You can change this setting by passing the directory to the `setup`
-function via the `dir` key:
-
-```lua
-require'mind'.setup {
-  dir = {
-    notes = "~/mind/notes",
-    journal = "~/mind/journal",
-    todo = "~/mind/tasks/todo",
-    wip = "~/mind/tasks/wip",
-    done = "~/mind/tasks/done",
-  }
-}
-```
-
-## Keybindings
-
-This plugin comes with no keybindings by default; you must create them on your side. Example of a possible
-configuration:
-
-```lua
-local function remap(mode, lhs, rhs)
-  vim.api.nvim_set_keymap(mode, lhs, rhs, { silent = true, noremap = true })
-end
-
-remap('n', '<leader>nn', "<cmd>lua require'mind'.open_note()<cr>")
-remap('n', '<leader>nN', "<cmd>lua require'mind'.new_note()<cr>")
-remap('n', '<leader>nt', "<cmd>lua require'mind'.open_todo()<cr>")
-remap('n', '<leader>nT', "<cmd>lua require'mind'.new_todo()<cr>")
-remap('n', '<leader>ns', "<cmd>lua require'mind'.open_wip()<cr>")
-remap('n', '<leader>nS', "<cmd>lua require'mind'.new_wip()<cr>")
-remap('n', '<leader>nd', "<cmd>lua require'mind'.open_done()<cr>")
-remap('n', '<leader>nD', "<cmd>lua require'mind'.new_done()<cr>")
-remap('n', '<leader>nj', "<cmd>lua require'mind'.open_daily()<cr>")
-remap('n', '<leader>nJ', "<cmd>lua require'mind'.open_journal()<cr>")
-remap('n', '<leader>n$t', "<cmd>lua require'mind'.mark_todo()<cr>")
-remap('n', '<leader>n$s', "<cmd>lua require'mind'.mark_wip()<cr>")
-remap('n', '<leader>n$d', "<cmd>lua require'mind'.mark_done()<cr>")
-```
-
-# Lua API
-
-The current API contains two functions:
-
-- `mind.open_note()`: open a note by fuzzy searching it.
-- `mind.new_note()`: prompt the user to enter a new node name and start editing it.
-- `mind.open_journal()`: open a journal entry by fuzzy searching it.
-- `mind.open_daily()`: automatically jump to the daily journal entry.
-- `mind.open_todo()`: open a TODO by fuzzy searching it.
-- `mind.new_todo()`: create a new TODO entry.
-- `mind.open_wip()`: open a WIP by fuzzy searching it.
-- `mind.new_wip()`: create a new WIP entry.
-- `mind.open_done()`: open a DONE by fuzzy searching it.
-- `mind.new_done()`: create a new DONE entry.
+[org-mode]: https://orgmode.org/
+[Notion]: https://www.notion.so/
