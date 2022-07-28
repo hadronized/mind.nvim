@@ -62,15 +62,40 @@ M.to_lines = function(tree)
   return lines
 end
 
-M.render = function(bufnr, tree)
+M.render = function(tree, bufnr)
   local lines = M.to_lines(tree)
 
   tree.bufnr = bufnr
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
-  vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
+end
+
+M.open = function(tree, default_keys)
+  -- window
+  vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
+  vim.api.nvim_win_set_width(0, 20)
+
+  -- buffer
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(0, bufnr)
+  vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
+  vim.api.nvim_win_set_option(0, 'nu', false)
+
+  -- tree
+  M.render(tree, bufnr)
+
+  -- keymaps for debugging
+  if (default_keys) then
+    vim.keymap.set('n', '<cr>', function() M.toggle_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', '<tab>', function() M.toggle_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', 'q', M.close, { buffer = true, noremap = true, silent = true })
+  end
+end
+
+M.close = function()
+  vim.api.nvim_win_hide(0)
 end
 
 M.toggle_node = function(tree, i)
@@ -81,7 +106,7 @@ M.toggle_node = function(tree, i)
   end
 
   if (tree.bufnr ~= nil) then
-    M.render(tree.bufnr, tree)
+    M.render(tree, tree.bufnr)
   end
 end
 
