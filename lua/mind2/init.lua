@@ -4,14 +4,6 @@ function Node(name, children)
   return { name = name, is_expanded = false, children = children }
 end
 
-M.is_leaf = function(node)
-  return node.children == nil or node.children == {}
-end
-
-M.is_functional = function(node)
-  return type(node.compute) == 'function'
-end
-
 function get_ith(parent, node, i)
   if (i == 0) then
     return parent, node, nil
