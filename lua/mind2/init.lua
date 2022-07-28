@@ -185,6 +185,36 @@ M.toggle_node_cursor = function(tree)
   M.toggle_node(tree, line)
 end
 
+function node_to_lua(depth, node, lines)
+  local pad = string.rep('  ', depth)
+
+  local line = pad .. string.format("oak.Node('%s'", node.name)
+
+  if (node.children ~= nil) then
+    lines[#lines + 1] = line .. ', {'
+
+    local depth_child = depth + 1
+
+    for _, child in ipairs(node.children) do
+      node_to_lua(depth_child, child, lines)
+    end
+
+    lines[#lines + 1] = pad .. '}),'
+  else
+    lines[#lines + 1] = line .. '),'
+  end
+end
+
+M.tree_to_lua = function(tree)
+  local lines = {
+    "local oak = require('oak')",
+    "return",
+  }
+
+  node_to_lua(1, tree, lines)
+  return lines
+end
+
 M.data = function()
   return Node('Mind', {
     Node('Tasks'),
