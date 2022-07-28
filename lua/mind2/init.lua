@@ -12,29 +12,100 @@ M.is_functional = function(node)
   return type(node.compute) == 'function'
 end
 
-function get_ith(node, i)
+function get_ith(parent, node, i)
   if (i == 0) then
-    return node
+    return parent, node, nil
   end
 
   i = i - 1
 
   if (node.children ~= nil and node.is_expanded) then
     for _, child in ipairs(node.children) do
-      n, i = get_ith(child, i)
+      p, n, i = get_ith(node, child, i)
 
       if (n ~= nil) then
-        return n
+        return p, n, nil
       end
     end
   end
 
-  return nil, i
+  return nil, nil, i
 end
 
 M.get_node_by_nb = function(tree, i)
-  local node, _ = get_ith(tree, i)
+  local _, node, _ = get_ith(nil, tree, i)
   return node
+end
+
+M.get_node_and_parent_by_nb = function(tree, i)
+  local parent, node, _ = get_ith(nil, tree, i)
+  return parent, node
+end
+
+-- Add a node as children of another node.
+function add_node(tree, i, name)
+  local parent = M.get_node_by_nb(tree, i)
+
+  if (parent == nil) then
+    vim.notify('add_node nope')
+    return
+  end
+
+  local node = Node(name)
+
+  if (parent.children == nil) then
+    parent.children = {}
+  end
+
+  parent.children[#parent.children + 1] = node
+
+  M.rerender(tree)
+end
+
+-- Ask the user for input and add as a node at the current location.
+M.input_node_cursor = function(tree)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  vim.ui.input({ prompt = 'Node name: ' }, function(input)
+    if (input ~= nil) then
+      add_node(tree, line, input)
+    end
+  end)
+end
+
+-- Delete a node at a given location.
+function delete_node(tree, i)
+  local parent, node = M.get_node_and_parent_by_nb(tree, i)
+
+  if (node == nil) then
+    vim.notify('add_node nope')
+    return
+  end
+
+  if (parent == nil) then
+    return false
+  end
+
+  local children = {}
+  for _, child in ipairs(parent.children) do
+    if (child ~= node) then
+      children[#children + 1] = child
+    end
+  end
+
+  if (#children == 0) then
+    children = nil
+  end
+
+  parent.children = children
+
+  M.rerender(tree)
+  return true
+end
+
+-- Delete the node under the cursor.
+M.delete_node_cursor = function(tree)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  delete_node(tree, line)
 end
 
 function render_node(node, depth, lines)
@@ -72,6 +143,13 @@ M.render = function(tree, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end
 
+-- Re-render a tree if it was already rendered buffer.
+M.rerender = function(tree)
+  if (tree.bufnr) then
+    M.render(tree, tree.bufnr)
+  end
+end
+
 M.open = function(tree, default_keys)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
@@ -91,6 +169,8 @@ M.open = function(tree, default_keys)
     vim.keymap.set('n', '<cr>', function() M.toggle_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
     vim.keymap.set('n', '<tab>', function() M.toggle_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
     vim.keymap.set('n', 'q', M.close, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', 'a', function() M.input_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
+    vim.keymap.set('n', 'd', function() M.delete_node_cursor(tree) end, { buffer = true, noremap = true, silent = true })
   end
 end
 
@@ -105,9 +185,7 @@ M.toggle_node = function(tree, i)
     node.is_expanded = not node.is_expanded
   end
 
-  if (tree.bufnr ~= nil) then
-    M.render(tree, tree.bufnr)
-  end
+  M.rerender(tree)
 end
 
 M.toggle_node_cursor = function(tree)
@@ -115,14 +193,16 @@ M.toggle_node_cursor = function(tree)
   M.toggle_node(tree, line)
 end
 
-M.data = Node('Mind', {
-  Node('Tasks'),
-  Node('Journal', {
-    Node('Foo'),
-    Node('Bar'),
-    Node('Zoo'),
-  }),
-  Node('Notes'),
-})
+M.data = function()
+  return Node('Mind', {
+    Node('Tasks'),
+    Node('Journal', {
+      Node('Foo'),
+      Node('Bar'),
+      Node('Zoo'),
+    }),
+    Node('Notes'),
+  })
+end
 
 return M
