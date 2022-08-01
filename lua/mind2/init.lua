@@ -1,5 +1,7 @@
 local M = {}
 
+local path = require'plenary.path'
+
 -- FIXME: recursively ensure that the paths are created
 local defaults = {
   state_path = '~/.local/share/mind.nvim/mind.json',
@@ -31,20 +33,40 @@ M.state = {
   projects = {},
 }
 
+-- Load the state.
+--
+-- If CWD has a .mind/, the projects part of the state is overriden with its contents. However, the main tree remains in
+-- M.opts.state_path.
 M.load_state = function()
   if (M.opts == nil or M.opts.state_path == nil) then
     vim.notify('cannot load shit')
     return
   end
 
+  local local_mind_state = path:new(vim.fn.getcwd(), '.mind/state.json')
+  if (local_mind_state:is_file()) then
+    -- we have a local mind; read the projects state from there
+    local file = io.open(local_mind_state, 'r')
+
+    if (file == nil) then
+      return
+    end
+
+    local encoded = file:read()
+    file:close()
+
+    if (encoded ~= nil) then
+      M.state.projects =
+    end
+  end
+
   local file = io.open(M.opts.state_path, 'r')
 
   if (file == nil) then
-    return
+      M.state.projects = vim.json.decode(encoded)
   end
 
   local encoded = file:read()
-
   file:close()
 
   if (encoded ~= nil) then
@@ -164,6 +186,7 @@ function add_node(tree, i, name)
   end
 
   parent.children[#parent.children + 1] = node
+  parent.is_expanded = true
 
   M.rerender(tree)
 end
