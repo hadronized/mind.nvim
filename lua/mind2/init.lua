@@ -2,6 +2,7 @@ local M = {}
 
 local defaults = {
   state_path = '/tmp/mind.json',
+  data_dir = '/tmp/mind-data'
   width = 40,
   use_default_keys = true,
 }
