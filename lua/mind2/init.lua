@@ -1,5 +1,6 @@
 local M = {}
 
+-- FIXME: recursively ensure that the paths are created
 local defaults = {
   state_path = '~/.local/share/mind.nvim/mind.json',
   data_dir = '~/.local/share/mind.nvim/data',
@@ -7,8 +8,16 @@ local defaults = {
   use_default_keys = true,
 }
 
+function expand_opts_paths()
+  M.opts.state_path = vim.fn.expand(M.opts.state_path)
+  M.opts.data_dir = vim.fn.expand(M.opts.data_dir)
+end
+
 M.setup = function(opts)
   M.opts = setmetatable(opts or {}, {__index = defaults})
+
+  expand_opts_paths()
+
   M.load_state()
 end
 
@@ -50,6 +59,12 @@ M.save_state = function()
 
   local encoded = vim.json.encode(M.state)
   local file = io.open(M.opts.state_path, 'w')
+
+  if (file == nil) then
+    vim.notify(string.format('cannot save state at %s', M.opts.state_path))
+    return
+  end
+
   file:write(encoded)
   file:close()
 end
@@ -309,11 +324,11 @@ end
 
 
 M.open_main = function()
-  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end, true)
+  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end)
 end
 
 M.open_project = function()
-  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end, true)
+  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end)
 end
 
 M.close = function()
