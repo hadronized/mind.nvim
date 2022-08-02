@@ -1,8 +1,8 @@
 local M = {}
 
 local defaults = {
-  state_path = '/tmp/mind.json',
-  data_dir = '/tmp/mind-data'
+  state_path = '~/.local/share/mind.nvim/mind.json',
+  data_dir = '~/.local/share/mind.nvim/data',
   width = 40,
   use_default_keys = true,
 }
