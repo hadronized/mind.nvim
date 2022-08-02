@@ -1,3 +1,7 @@
+local renderer = require'neo-tree.ui.renderer'
+local manager = require'neo-tree.sources.manager'
+local events = require'neo-tree.events'
+
 local M = {}
 
 local path = require'plenary.path'
