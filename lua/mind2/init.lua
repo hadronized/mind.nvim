@@ -11,6 +11,7 @@ function notify(msg, lvl)
 end
 
 -- FIXME: recursively ensure that the paths are created
+-- FIXME: group settings by categories, like opts.ui.*, opts.fs.*, opts.edit.*, etc. etc.
 local defaults = {
   -- state & data stuff
   state_path = '~/.local/share/mind.nvim/mind.json',
@@ -22,7 +23,8 @@ local defaults = {
 
   -- UI stuff
   width = 30,
-  data_marker = '',
+  root_marker = ' ',
+  data_marker = ' ',
 
   -- highlight stuff
   hl_mark_closed = 'LineNr',
@@ -31,7 +33,7 @@ local defaults = {
   hl_node_leaf = 'String',
   hl_node_parent = 'Title',
   hl_modifier_local = 'Comment',
-  hl_modifier_has_data = 'Comment',
+  hl_modifier_grey = 'Grey',
 
   -- keybindings stuff
   use_default_keys = true,
@@ -56,7 +58,6 @@ function compute_hl(type)
   end
 end
 
-
 function expand_opts_paths()
   M.opts.state_path = vim.fn.expand(M.opts.state_path)
   M.opts.data_dir = vim.fn.expand(M.opts.data_dir)
@@ -80,7 +81,8 @@ M.load_state = function()
     tree = {
       contents = {
         { text = 'Main', type = M.NodeType.ROOT },
-      }
+      },
+      icon = M.opts.root_marker,
     },
 
     -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
@@ -121,7 +123,8 @@ M.load_state = function()
         contents = {
           { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
           { text = ' local', type = M.NodeType.LOCAL },
-        }
+        },
+        icon = M.opts.root_marker,
       }
     else
       encoded = file:read()
@@ -209,8 +212,11 @@ function open_data(tree, i, dir)
   M.rerender(tree)
 
   local winnr = require('window-picker').pick_window()
-  vim.api.nvim_set_current_win(winnr)
-  vim.api.nvim_cmd({ cmd = 'e', args = { data } }, {})
+
+  if (winnr ~= nil) then
+    vim.api.nvim_set_current_win(winnr)
+    vim.api.nvim_cmd({ cmd = 'e', args = { data } }, {})
+  end
 end
 
 M.open_data_cursor = function(tree, data_dir)
@@ -270,7 +276,8 @@ M.wrap_project_tree_fn = function(f, save, tree, use_global)
         tree = {
           contents = {
             { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
-          }
+          },
+          icon = M.opts.root_marker,
         }
         M.state.projects[cwd] = tree
       end
@@ -378,7 +385,6 @@ function delete_node(tree, i)
   parent.children = children
 
   M.rerender(tree)
-  return true
 end
 
 -- Delete the node under the cursor.
@@ -389,7 +395,7 @@ end
 
 -- Rename a node at a given location.
 function rename_node(tree, i)
-  local parent, node = M.get_node_and_parent_by_nb(tree, i)
+  local node = M.get_node_by_nb(tree, i)
 
   if (node == nil) then
     notify('rename_node nope', 4)
@@ -403,7 +409,6 @@ function rename_node(tree, i)
   end)
 
   M.rerender(tree)
-  return true
 end
 
 -- Rename the node under the cursor.
@@ -412,11 +417,51 @@ M.rename_node_cursor = function(tree)
   rename_node(tree, line)
 end
 
+-- Change a node’s icon at a given location.
+function change_icon_node(tree, i)
+  local node = M.get_node_by_nb(tree, i)
+
+  if (node == nil) then
+    notify('change_icon_node nope', 4)
+    return
+  end
+
+  local prompt = 'Node icon: '
+  if (node.icon ~= nil) then
+    prompt = prompt .. node.icon .. ' -> '
+  end
+
+
+  vim.ui.input({ prompt = prompt }, function(input)
+    if (input ~= nil) then
+      node.icon = input
+    end
+  end)
+
+  M.rerender(tree)
+end
+
+-- Change the icon of the node under the cursor.
+M.change_icon_node_cursor = function(tree)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  change_icon_node(tree, line)
+end
 
 function compute_node_name_and_hl(node)
   local name = ''
   local partial_hls = {}
 
+  -- the icon goes first
+  if (node.icon ~= nil) then
+    name = node.icon
+    partial_hls[#partial_hls + 1] = {
+      group = M.opts.hl_modifier_grey,
+      -- group = compute_hl(node.contents[1].type),
+      width = #name,
+    }
+  end
+
+  -- then the contents
   for _, content in ipairs(node.contents) do
     name = name .. content.text
 
@@ -431,7 +476,7 @@ function compute_node_name_and_hl(node)
     name = name .. marker
 
     partial_hls[#partial_hls +1 ] = {
-      group = M.opts.hl_modifier_has_data,
+      group = M.opts.hl_modifier_grey,
       width = #marker,
     }
   end
@@ -555,6 +600,11 @@ M.open_tree = function(tree, data_dir, default_keys)
 
     vim.keymap.set('n', '<cr>', function()
       M.open_data_cursor(tree, data_dir)
+      M.save_state()
+    end, { buffer = true, noremap = true, silent = true })
+
+    vim.keymap.set('n', 'I', function()
+      M.change_icon_node_cursor(tree)
       M.save_state()
     end, { buffer = true, noremap = true, silent = true })
   end
