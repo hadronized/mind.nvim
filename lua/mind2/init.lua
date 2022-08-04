@@ -12,13 +12,50 @@ end
 
 -- FIXME: recursively ensure that the paths are created
 local defaults = {
+  -- state & data stuff
   state_path = '~/.local/share/mind.nvim/mind.json',
   data_dir = '~/.local/share/mind.nvim/data',
-  width = 40,
-  use_default_keys = true,
+
+  -- edition stuff
   data_extension = '.md',
-  data_header = '# %s'
+  data_header = '# %s',
+
+  -- UI stuff
+  width = 40,
+  data_marker = '',
+
+  -- highlight stuff
+  hl_mark_closed = 'LineNr',
+  hl_mark_open = 'LineNr',
+  hl_node_root = 'Identifier',
+  hl_node_leaf = 'String',
+  hl_node_parent = 'Title',
+  hl_modifier_local = 'Comment',
+  hl_modifier_has_data = 'Comment',
+
+  -- keybindings stuff
+  use_default_keys = true,
 }
+
+M.NodeType = {
+  ROOT = 0,
+  PARENT = 1,
+  LEAF = 2,
+  LOCAL = 3,
+}
+
+function compute_hl(type)
+  if (type == M.NodeType.ROOT) then
+    return M.opts.hl_node_root
+  elseif (type == M.NodeType.PARENT) then
+    return M.opts.hl_node_parent
+  elseif (type == M.NodeType.LEAF) then
+    return M.opts.hl_node_leaf
+  elseif (type == M.NodeType.LOCAL) then
+    return M.opts.hl_modifier_local
+  end
+end
+
 
 function expand_opts_paths()
   M.opts.state_path = vim.fn.expand(M.opts.state_path)
@@ -41,7 +78,9 @@ M.load_state = function()
   M.state = {
     -- Main tree, used for when no specific project is wanted.
     tree = {
-      name = 'Main'
+      contents = {
+        { text = 'Main', type = M.NodeType.ROOT },
+      }
     },
 
     -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
@@ -78,7 +117,12 @@ M.load_state = function()
 
     if (file == nil) then
       notify('no local state', 4)
-      M.local_tree = { name = cwd:match('^.+/(.+)$') }
+      M.local_tree = {
+        contents = {
+          { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
+          { text = ' local', type = M.NodeType.LOCAL },
+        }
+      }
     else
       encoded = file:read()
       file:close()
@@ -152,8 +196,8 @@ function open_data(tree, i, dir)
 
   local data = node.data
   if (data == nil) then
-    contents = string.format(M.opts.data_header, node.name)
-    data = new_data_file(dir, node.name .. M.opts.data_extension, contents)
+    contents = string.format(M.opts.data_header, node.contents[1].text)
+    data = new_data_file(dir, node.contents[1].text .. M.opts.data_extension, contents)
 
     if (data == nil) then
       return
@@ -161,6 +205,8 @@ function open_data(tree, i, dir)
 
     node.data = data
   end
+
+  M.rerender(tree)
 
   local winnr = require('window-picker').pick_window()
   vim.api.nvim_set_current_win(winnr)
@@ -178,7 +224,14 @@ M.open_data_cursor = function(tree, data_dir)
 end
 
 M.Node = function(name, children)
-  return { name = name, is_expanded = false, children = children }
+  local contents = {
+    { text = name, type = M.NodeType.LEAF }
+  }
+  return {
+    contents = contents,
+    is_expanded = false,
+    children = children
+  }
 end
 
 -- Wrap a function call expecting a tree by extracting from the state the right tree, depending on CWD.
@@ -214,7 +267,11 @@ M.wrap_project_tree_fn = function(f, save, tree, use_global)
       tree = M.state.projects[cwd]
 
       if (tree == nil) then
-        tree = { name = cwd:match('^.+/(.+)$') }
+        tree = {
+          contents = {
+            { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
+          }
+        }
         M.state.projects[cwd] = tree
       end
     else
@@ -261,7 +318,7 @@ end
 
 -- Add a node as children of another node.
 function add_node(tree, i, name)
-  local parent = M.get_node_by_nb(tree, i)
+  local grand_parent, parent = M.get_node_and_parent_by_nb(tree, i)
 
   if (parent == nil) then
     notify('add_node nope', 4)
@@ -272,6 +329,10 @@ function add_node(tree, i, name)
 
   if (parent.children == nil) then
     parent.children = {}
+
+    if (grand_parent ~= nil) then
+      parent.contents[1].type = M.NodeType.PARENT
+    end
   end
 
   parent.children[#parent.children + 1] = node
@@ -335,9 +396,9 @@ function rename_node(tree, i)
     return
   end
 
-  vim.ui.input({ prompt = string.format('Rename node: %s -> ', node.name) }, function(input)
+  vim.ui.input({ prompt = string.format('Rename node: %s -> ', node.contents[1].text) }, function(input)
     if (input ~= nil) then
-      node.name = input
+      node.contents[1].text = input
     end
   end)
 
@@ -351,36 +412,100 @@ M.rename_node_cursor = function(tree)
   rename_node(tree, line)
 end
 
-function render_node(node, depth, lines)
+
+function compute_node_name_and_hl(node)
+  local name = ''
+  local partial_hls = {}
+
+  for _, content in ipairs(node.contents) do
+    name = name .. content.text
+
+    partial_hls[#partial_hls + 1] = {
+      group = compute_hl(content.type),
+      width = #content.text
+    }
+  end
+
+  if (node.data ~= nil) then
+    local marker = ' ' .. M.opts.data_marker
+    name = name .. marker
+
+    partial_hls[#partial_hls +1 ] = {
+      group = M.opts.hl_modifier_has_data,
+      width = #marker,
+    }
+  end
+
+  return name, partial_hls
+end
+
+function render_node(node, depth, lines, hls)
   local line = string.rep(' ', depth * 2)
+  local name, partial_hls = compute_node_name_and_hl(node)
+  local hl_col_start = #line
+  local hl_line = #lines
 
   if (node.children ~= nil) then
     if (node.is_expanded) then
-      lines[#lines + 1] = line .. ' ' .. node.name
+      local mark = ' '
+      local hl_col_end = hl_col_start + #mark
+      hls[#hls + 1] = { group = M.opts.hl_mark_open, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      lines[#lines + 1] = line .. mark .. name
+
+      for _, hl in ipairs(partial_hls) do
+        hl_col_start = hl_col_end
+        hl_col_end = hl_col_start + hl.width
+        hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      end
 
       depth = depth + 1
       for _, child in ipairs(node.children) do
-        render_node(child, depth, lines)
+        render_node(child, depth, lines, hls)
       end
     else
-      lines[#lines + 1] = line .. ' ' .. node.name
+      local mark = ' '
+      local hl_col_end = hl_col_start + #mark
+      hls[#hls + 1] = { group = M.opts.hl_mark_closed, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      lines[#lines + 1] = line .. mark .. name
+
+      for _, hl in ipairs(partial_hls) do
+        hl_col_start = hl_col_end
+        hl_col_end = hl_col_start + hl.width
+        hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      end
     end
   else
-    lines[#lines + 1] = line .. node.name
+    local hl_col_end = hl_col_start
+    lines[#lines + 1] = line .. name
+
+    for _, hl in ipairs(partial_hls) do
+      hl_col_start = hl_col_end
+      hl_col_end = hl_col_start + hl.width
+      hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+    end
   end
 end
 
-M.to_lines = function(tree)
+function render_tree(tree)
   local lines = {}
-  render_node(tree, 0, lines)
-  return lines
+  local hls = {}
+  render_node(tree, 0, lines, hls)
+  return lines, hls
 end
 
 M.render = function(tree, bufnr)
-  local lines = M.to_lines(tree)
+  local lines, hls = render_tree(tree)
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
+
+  -- set the lines
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+
+  -- apply the highlights
+  for _, hl in ipairs(hls) do
+    vim.api.nvim_buf_add_highlight(bufnr, 0, hl.group, hl.line, hl.col_start, hl.col_end)
+  end
+
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end
 
@@ -395,7 +520,7 @@ M.open_tree = function(tree, data_dir, default_keys)
   vim.api.nvim_win_set_width(0, M.opts.width or 40)
 
   -- buffer
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = vim.api.nvim_create_buf(false, false)
   vim.api.nvim_buf_set_name(bufnr, 'mind')
   vim.api.nvim_win_set_buf(0, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
@@ -406,11 +531,6 @@ M.open_tree = function(tree, data_dir, default_keys)
 
   -- keymaps for debugging
   if (default_keys) then
-    vim.keymap.set('n', '<cr>', function()
-      M.toggle_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
     vim.keymap.set('n', '<tab>', function()
       M.toggle_node_cursor(tree)
       M.save_state()
