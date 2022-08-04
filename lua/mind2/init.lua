@@ -6,6 +6,10 @@ local M = {}
 
 local path = require'plenary.path'
 
+function notify(msg, lvl)
+  vim.notify(msg, lvl, { title = 'Mind', icon = '' })
+end
+
 -- FIXME: recursively ensure that the paths are created
 local defaults = {
   state_path = '~/.local/share/mind.nvim/mind.json',
@@ -37,44 +41,50 @@ M.state = {
   projects = {},
 }
 
+-- Local tree, for local projects.
+M.local_tree = nil
+
 -- Load the state.
 --
 -- If CWD has a .mind/, the projects part of the state is overriden with its contents. However, the main tree remains in
 -- M.opts.state_path.
 M.load_state = function()
   if (M.opts == nil or M.opts.state_path == nil) then
-    vim.notify('cannot load shit')
+    notify('cannot load shit', 4)
     return
-  end
-
-  local local_mind_state = path:new(vim.fn.getcwd(), '.mind/state.json')
-  if (local_mind_state:is_file()) then
-    -- we have a local mind; read the projects state from there
-    local file = io.open(local_mind_state, 'r')
-
-    if (file == nil) then
-      return
-    end
-
-    local encoded = file:read()
-    file:close()
-
-    if (encoded ~= nil) then
-      M.state.projects =
-    end
   end
 
   local file = io.open(M.opts.state_path, 'r')
 
   if (file == nil) then
-      M.state.projects = vim.json.decode(encoded)
+    notify('no global state', 4)
+  else
+    local encoded = file:read()
+    file:close()
+
+    if (encoded ~= nil) then
+      M.state = vim.json.decode(encoded)
+    end
   end
 
-  local encoded = file:read()
-  file:close()
+  -- if there is a local state, we get it and replace the M.state.projects[the_project] with it
+  local cwd = vim.fn.getcwd()
+  local local_mind = path:new(cwd, '.mind')
+  if (local_mind:is_dir()) then
+    -- we have a local mind; read the projects state from there
+    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
 
-  if (encoded ~= nil) then
-    M.state = vim.json.decode(encoded)
+    if (file == nil) then
+      notify('no local state', 4)
+      M.local_tree = { name = cwd:match('^.+/(.+)$') }
+    else
+      encoded = file:read()
+      file:close()
+
+      if (encoded ~= nil) then
+        M.local_tree = vim.json.decode(encoded)
+      end
+    end
   end
 end
 
@@ -83,16 +93,31 @@ M.save_state = function()
     return
   end
 
-  local encoded = vim.json.encode(M.state)
   local file = io.open(M.opts.state_path, 'w')
 
   if (file == nil) then
-    vim.notify(string.format('cannot save state at %s', M.opts.state_path))
-    return
+    notify(string.format('cannot save state at %s', M.opts.state_path), 4)
+  else
+    local encoded = vim.json.encode(M.state)
+    file:write(encoded)
+    file:close()
   end
 
-  file:write(encoded)
-  file:close()
+  -- if there is a local state, we write the local project
+  local cwd = vim.fn.getcwd()
+  local local_mind = path:new(cwd, '.mind')
+  if (local_mind:is_dir()) then
+    -- we have a local mind
+    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
+
+    if (file == nil) then
+      notify(string.format('cannot save local project at %s', cwd), 4)
+    else
+      local encoded = vim.json.encode(M.local_tree)
+      file:write(encoded)
+      file:close()
+    end
+  end
 end
 
 M.Node = function(name, children)
@@ -126,14 +151,18 @@ end
 -- Wrap a function call expecting a project tree.
 --
 -- If the projec tree doesn’t exist, it is automatically created.
-M.wrap_project_tree_fn = function(f, save, tree)
+M.wrap_project_tree_fn = function(f, save, tree, use_global)
   if (tree == nil) then
-    local cwd = vim.fn.getcwd()
-    tree = M.state.projects[cwd]
+    if (M.local_tree == nil or use_global) then
+      local cwd = vim.fn.getcwd()
+      tree = M.state.projects[cwd]
 
-    if (tree == nil) then
-      tree = { name = cwd:match('^.+/(.+)$') }
-      M.state.projects[cwd] = tree
+      if (tree == nil) then
+        tree = { name = cwd:match('^.+/(.+)$') }
+        M.state.projects[cwd] = tree
+      end
+    else
+      tree = M.local_tree
     end
   end
 
@@ -179,7 +208,7 @@ function add_node(tree, i, name)
   local parent = M.get_node_by_nb(tree, i)
 
   if (parent == nil) then
-    vim.notify('add_node nope')
+    notify('add_node nope', 4)
     return
   end
 
@@ -210,7 +239,7 @@ function delete_node(tree, i)
   local parent, node = M.get_node_and_parent_by_nb(tree, i)
 
   if (node == nil) then
-    vim.notify('add_node nope')
+    notify('add_node nope', 4)
     return
   end
 
@@ -246,7 +275,7 @@ function rename_node(tree, i)
   local parent, node = M.get_node_and_parent_by_nb(tree, i)
 
   if (node == nil) then
-    vim.notify('rename_node nope')
+    notify('rename_node nope', 4)
     return
   end
 
@@ -354,8 +383,8 @@ M.open_main = function()
   M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end)
 end
 
-M.open_project = function()
-  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end)
+M.open_project = function(use_global)
+  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end, false, nil, use_global)
 end
 
 M.close = function()
