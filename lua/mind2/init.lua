@@ -517,7 +517,7 @@ end
 M.open_tree = function(tree, data_dir, default_keys)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
-  vim.api.nvim_win_set_width(0, M.opts.width or 40)
+  vim.api.nvim_win_set_width(0, M.opts.width)
 
   -- buffer
   local bufnr = vim.api.nvim_create_buf(false, false)
