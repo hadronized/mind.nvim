@@ -16,6 +16,8 @@ local defaults = {
   data_dir = '~/.local/share/mind.nvim/data',
   width = 40,
   use_default_keys = true,
+  data_extension = '.md',
+  data_header = '# %s'
 }
 
 function expand_opts_paths()
@@ -120,10 +122,64 @@ M.save_state = function()
   end
 end
 
+-- Create a new random file in a given directory.
+--
+-- Return the path to the created file.
+function new_data_file(dir, name, content)
+  local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name
+  local file_path = path:new(dir, filename):expand()
+
+  local file = io.open(file_path, 'w')
+
+  if (file == nil) then
+    notify('cannot open data file: ' .. file_path)
+    return nil
+  end
+
+  file:write(content)
+  file:close()
+
+  return file_path
+end
+
+function open_data(tree, i, dir)
+  local node = M.get_node_by_nb(tree, i)
+
+  if (node == nil) then
+    notify('open_data nope', 4)
+    return
+  end
+
+  local data = node.data
+  if (data == nil) then
+    contents = string.format(M.opts.data_header, node.name)
+    data = new_data_file(dir, node.name .. M.opts.data_extension, contents)
+
+    if (data == nil) then
+      return
+    end
+
+    node.data = data
+  end
+
+  local winnr = require('window-picker').pick_window()
+  vim.api.nvim_set_current_win(winnr)
+  vim.api.nvim_cmd({ cmd = 'e', args = { data } }, {})
+end
+
+M.open_data_cursor = function(tree, data_dir)
+  if (data_dir == nil) then
+    notify('data directory not available', 4)
+    return
+  end
+
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  open_data(tree, line, data_dir)
+end
+
 M.Node = function(name, children)
   return { name = name, is_expanded = false, children = children }
 end
-
 
 -- Wrap a function call expecting a tree by extracting from the state the right tree, depending on CWD.
 --
@@ -333,13 +389,14 @@ M.rerender = function(tree)
   M.render(tree, 0)
 end
 
-M.open_tree = function(tree, default_keys)
+M.open_tree = function(tree, data_dir, default_keys)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
   vim.api.nvim_win_set_width(0, M.opts.width or 40)
 
   -- buffer
   local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(bufnr, 'mind')
   vim.api.nvim_win_set_buf(0, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
   vim.api.nvim_win_set_option(0, 'nu', false)
@@ -375,20 +432,37 @@ M.open_tree = function(tree, default_keys)
       M.rename_node_cursor(tree)
       M.save_state()
     end, { buffer = true, noremap = true, silent = true })
+
+    vim.keymap.set('n', '<cr>', function()
+      M.open_data_cursor(tree, data_dir)
+      M.save_state()
+    end, { buffer = true, noremap = true, silent = true })
   end
 end
 
+function get_project_data_dir()
+  local cwd = vim.fn.getcwd()
+  local local_mind = path:new(cwd, '.mind/data')
+  if (local_mind:is_dir()) then
+    return path:new(cwd, '.mind/data'):expand()
+  else
+    return nil
+  end
+
+  return M.opts.data_dir
+end
 
 M.open_main = function()
-  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end)
+  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.data_dir, M.opts.use_default_keys) end)
 end
 
 M.open_project = function(use_global)
-  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, M.opts.use_default_keys) end, false, nil, use_global)
+  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, get_project_data_dir(), M.opts.use_default_keys) end, false, nil, use_global)
 end
 
 M.close = function()
-  vim.api.nvim_win_hide(0)
+  -- vim.api.nvim_win_hide(0)
+  vim.api.nvim_buf_delete(0, { force = true })
 end
 
 M.toggle_node = function(tree, i)
