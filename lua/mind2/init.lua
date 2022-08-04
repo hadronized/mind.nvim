@@ -31,24 +31,24 @@ M.setup = function(opts)
   M.load_state()
 end
 
-M.state = {
-  -- Main tree, used for when no specific project is wanted.
-  tree = {
-    name = 'Main'
-  },
-
-  -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
-  projects = {},
-}
-
--- Local tree, for local projects.
-M.local_tree = nil
-
 -- Load the state.
 --
 -- If CWD has a .mind/, the projects part of the state is overriden with its contents. However, the main tree remains in
 -- M.opts.state_path.
 M.load_state = function()
+  M.state = {
+    -- Main tree, used for when no specific project is wanted.
+    tree = {
+      name = 'Main'
+    },
+
+    -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
+    projects = {},
+  }
+
+  -- Local tree, for local projects.
+  M.local_tree = nil
+
   if (M.opts == nil or M.opts.state_path == nil) then
     notify('cannot load shit', 4)
     return
