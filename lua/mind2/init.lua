@@ -21,13 +21,13 @@ local defaults = {
   data_header = '# %s',
 
   -- UI stuff
-  width = 40,
-  data_marker = '',
+  width = 30,
+  data_marker = '',
 
   -- highlight stuff
   hl_mark_closed = 'LineNr',
   hl_mark_open = 'LineNr',
-  hl_node_root = 'Identifier',
+  hl_node_root = 'Function',
   hl_node_leaf = 'String',
   hl_node_parent = 'Title',
   hl_modifier_local = 'Comment',
