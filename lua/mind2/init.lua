@@ -403,7 +403,7 @@ function rename_node(tree, i)
     return
   end
 
-  vim.ui.input({ prompt = string.format('Rename node: %s -> ', node.contents[1].text) }, function(input)
+  vim.ui.input({ prompt = 'Rename node: ', default = node.contents[1].text }, function(input)
     if (input ~= nil) then
       node.contents[1].text = input
     end
@@ -431,7 +431,6 @@ function change_icon_node(tree, i)
   if (node.icon ~= nil) then
     prompt = prompt .. node.icon .. ' -> '
   end
-
 
   vim.ui.input({ prompt = prompt }, function(input)
     if (input ~= nil) then
