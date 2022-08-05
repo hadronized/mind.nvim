@@ -34,6 +34,7 @@ local defaults = {
   hl_node_parent = 'Title',
   hl_modifier_local = 'Comment',
   hl_modifier_grey = 'Grey',
+  hl_modifier_empty = 'CursorLineNr',
 
   -- keybindings stuff
   use_default_keys = true,
@@ -468,6 +469,12 @@ function compute_node_name_and_hl(node)
       group = compute_hl(content.type),
       width = #content.text
     }
+  end
+
+  -- special case for the first highlight: if the node doesn’t have children nor data, we make its name grey instead to
+  -- make it visible that it doesn’t have anything relevant right now
+  if (node.data == nil and node.children == nil) then
+    partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_modifier_empty
   end
 
   if (node.data ~= nil) then
