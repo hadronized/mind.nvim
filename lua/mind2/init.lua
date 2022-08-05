@@ -455,8 +455,7 @@ function compute_node_name_and_hl(node)
   if (node.icon ~= nil) then
     name = node.icon
     partial_hls[#partial_hls + 1] = {
-      group = M.opts.hl_modifier_grey,
-      -- group = compute_hl(node.contents[1].type),
+      group = compute_hl(node.contents[1].type),
       width = #name,
     }
   end
