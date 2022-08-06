@@ -6,7 +6,7 @@ local M = {}
 
 local path = require'plenary.path'
 
-function notify(msg, lvl)
+local function notify(msg, lvl)
   vim.notify(msg, lvl, { title = 'Mind', icon = '' })
 end
 
@@ -25,6 +25,7 @@ local defaults = {
   width = 30,
   root_marker = ' ',
   data_marker = ' ',
+  selected_marker = ' ',
 
   -- highlight stuff
   hl_mark_closed = 'LineNr',
@@ -35,6 +36,7 @@ local defaults = {
   hl_modifier_local = 'Comment',
   hl_modifier_grey = 'Grey',
   hl_modifier_empty = 'CursorLineNr',
+  hl_modifier_selected = 'Error',
 
   -- keybindings stuff
   use_default_keys = true,
@@ -47,7 +49,7 @@ M.NodeType = {
   LOCAL = 3,
 }
 
-function compute_hl(type)
+local function compute_hl(type)
   if (type == M.NodeType.ROOT) then
     return M.opts.hl_node_root
   elseif (type == M.NodeType.PARENT) then
@@ -59,7 +61,7 @@ function compute_hl(type)
   end
 end
 
-function expand_opts_paths()
+local function expand_opts_paths()
   M.opts.state_path = vim.fn.expand(M.opts.state_path)
   M.opts.data_dir = vim.fn.expand(M.opts.data_dir)
 end
@@ -138,10 +140,32 @@ M.load_state = function()
   end
 end
 
+-- Function run to cleanse a tree before saving (some data shouldn’t be saved).
+local function pre_save()
+  if (M.state.tree.selected ~= nil) then
+    M.state.tree.selected.is_selected = nil
+    M.state.tree.selected = nil
+  end
+
+  if (M.local_tree ~= nil and M.local_tree.selected ~= nil) then
+    M.local_tree.selected.is_selected = nil
+    M.local_tree.selected = nil
+  end
+
+  for _, project in ipairs(M.state.projects) do
+    if (project.selected ~= nil) then
+      project.selected.is_selected = nil
+      project.selected = nil
+    end
+  end
+end
+
 M.save_state = function()
   if (M.opts == nil or M.opts.state_path == nil) then
     return
   end
+
+  pre_save()
 
   local file = io.open(M.opts.state_path, 'w')
 
@@ -173,7 +197,7 @@ end
 -- Create a new random file in a given directory.
 --
 -- Return the path to the created file.
-function new_data_file(dir, name, content)
+local function new_data_file(dir, name, content)
   local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name
   local file_path = path:new(dir, filename):expand()
 
@@ -190,7 +214,7 @@ function new_data_file(dir, name, content)
   return file_path
 end
 
-function open_data(tree, i, dir)
+local function open_data(tree, i, dir)
   local node = M.get_node_by_nb(tree, i)
 
   if (node == nil) then
@@ -294,7 +318,7 @@ M.wrap_project_tree_fn = function(f, save, tree, use_global)
   end
 end
 
-function get_ith(parent, node, i)
+local function get_ith(parent, node, i)
   if (i == 0) then
     return parent, node, nil
   end
@@ -325,7 +349,7 @@ M.get_node_and_parent_by_nb = function(tree, i)
 end
 
 -- Add a node as children of another node.
-function add_node(tree, i, name)
+local function add_node(tree, i, name)
   local grand_parent, parent = M.get_node_and_parent_by_nb(tree, i)
 
   if (parent == nil) then
@@ -360,7 +384,7 @@ M.input_node_cursor = function(tree)
 end
 
 -- Delete a node at a given location.
-function delete_node(tree, i)
+local function delete_node(tree, i)
   local parent, node = M.get_node_and_parent_by_nb(tree, i)
 
   if (node == nil) then
@@ -395,7 +419,7 @@ M.delete_node_cursor = function(tree)
 end
 
 -- Rename a node at a given location.
-function rename_node(tree, i)
+local function rename_node(tree, i)
   local node = M.get_node_by_nb(tree, i)
 
   if (node == nil) then
@@ -419,7 +443,7 @@ M.rename_node_cursor = function(tree)
 end
 
 -- Change a node’s icon at a given location.
-function change_icon_node(tree, i)
+local function change_icon_node(tree, i)
   local node = M.get_node_by_nb(tree, i)
 
   if (node == nil) then
@@ -447,7 +471,7 @@ M.change_icon_node_cursor = function(tree)
   change_icon_node(tree, line)
 end
 
-function compute_node_name_and_hl(node)
+local function compute_node_name_and_hl(node)
   local name = ''
   local partial_hls = {}
 
@@ -476,12 +500,24 @@ function compute_node_name_and_hl(node)
     partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_modifier_empty
   end
 
+  -- special marker for data
   if (node.data ~= nil) then
     local marker = ' ' .. M.opts.data_marker
     name = name .. marker
 
-    partial_hls[#partial_hls +1 ] = {
+    partial_hls[#partial_hls + 1] = {
       group = M.opts.hl_modifier_grey,
+      width = #marker,
+    }
+  end
+
+  -- special marker for selection
+  if (node.is_selected) then
+    local marker = ' ' .. M.opts.selected_marker
+    name = name .. marker
+
+    partial_hls[#partial_hls + 1] = {
+      group = M.opts.hl_modifier_selected,
       width = #marker,
     }
   end
@@ -489,7 +525,7 @@ function compute_node_name_and_hl(node)
   return name, partial_hls
 end
 
-function render_node(node, depth, lines, hls)
+local function render_node(node, depth, lines, hls)
   local line = string.rep(' ', depth * 2)
   local name, partial_hls = compute_node_name_and_hl(node)
   local hl_col_start = #line
@@ -536,7 +572,7 @@ function render_node(node, depth, lines, hls)
   end
 end
 
-function render_tree(tree)
+local function render_tree(tree)
   local lines = {}
   local hls = {}
   render_node(tree, 0, lines, hls)
@@ -612,10 +648,14 @@ M.open_tree = function(tree, data_dir, default_keys)
       M.change_icon_node_cursor(tree)
       M.save_state()
     end, { buffer = true, noremap = true, silent = true })
+
+    vim.keymap.set('n', 'x', function()
+      M.toggle_select_node_cursor(tree)
+    end, { buffer = true, noremap = true, silent = true })
   end
 end
 
-function get_project_data_dir()
+local function get_project_data_dir()
   local cwd = vim.fn.getcwd()
   local local_mind = path:new(cwd, '.mind/data')
   if (local_mind:is_dir()) then
@@ -636,7 +676,6 @@ M.open_project = function(use_global)
 end
 
 M.close = function()
-  -- vim.api.nvim_win_hide(0)
   vim.api.nvim_buf_delete(0, { force = true })
 end
 
@@ -645,14 +684,93 @@ M.toggle_node = function(tree, i)
 
   if (node ~= nil) then
     node.is_expanded = not node.is_expanded
+    M.rerender(tree)
   end
+end
 
+-- Select a node.
+--
+-- A selected node can be operated on by different kind of operations.
+local function select_node(tree, i)
+  local node = M.get_node_by_nb(tree, i)
+
+  if (node ~= nil) then
+    node.is_selected = true
+    tree.selected = node
+    M.rerender(tree)
+  end
+end
+
+-- Select the node under the cursor.
+M.select_node_cursor = function(tree)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  select_node(tree, line)
+end
+
+M.unselect_node = function(tree)
+  tree.selected.is_selected = nil
+  tree.selected = nil
   M.rerender(tree)
+end
+
+M.toggle_select_node_cursor = function(tree)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+  if (tree.selected ~= nil) then
+    local node = M.get_node_by_nb(tree, line)
+    if (node == tree.selected) then
+      M.unselect_node(tree)
+    else
+      M.unselect_node(tree)
+      select_node(tree, line)
+    end
+  else
+    select_node(tree, line)
+  end
 end
 
 M.toggle_node_cursor = function(tree)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
   M.toggle_node(tree, line)
+end
+
+-- Move a node at a given cursor position.
+M.selected_move = function(tree, i)
+  if (tree.selected == nil) then
+    notify('cannot move; no selected node', vim.log.levels.WARN)
+  end
+
+  local parent, node = M.get_node_and_parent_by_nb(tree, i)
+
+  if (parent == nil) then
+    notify('cannot move root', vim.log.levels.ERROR)
+    return
+  end
+
+  if (node == nil) then
+    notify('cannot move: wrong destination', vim.log.levels.ERROR)
+  end
+
+  -- look for the index in parent’s children of the node
+  local index
+  for i, child in ipairs(parent.children) do
+    if (child == node) then
+      index = i
+      break
+    end
+  end
+
+  -- right shift everything
+  local prev = tree.selected
+  for i = index, #parent.children do
+    local n = parent.children[i]
+    parent.children[i] = prev
+    prev = n
+  end
+
+  parent.children[#parent.children + 1] = prev
+
+  M.unselect_node(tree)
 end
 
 return M
