@@ -1,10 +1,9 @@
 local renderer = require'neo-tree.ui.renderer'
 local manager = require'neo-tree.sources.manager'
 local events = require'neo-tree.events'
+local path = require'plenary.path'
 
 local M = {}
-
-local path = require'plenary.path'
 
 local function notify(msg, lvl)
   vim.notify(msg, lvl, { title = 'Mind', icon = '' })
@@ -24,6 +23,7 @@ local defaults = {
   -- UI stuff
   width = 30,
   root_marker = ' ',
+  local_marker = 'local',
   data_marker = '',
   selected_marker = '',
 
@@ -42,11 +42,9 @@ local defaults = {
   use_default_keys = true,
 }
 
-M.NodeType = {
+M.TreeType = {
   ROOT = 0,
-  PARENT = 1,
-  LEAF = 2,
-  LOCAL = 3,
+  LOCAL_ROOT = 1,
 }
 
 M.MoveDir = {
@@ -55,15 +53,15 @@ M.MoveDir = {
   INSIDE = 2,
 }
 
-local function compute_hl(type)
-  if (type == M.NodeType.ROOT) then
+local function compute_hl(node)
+  if (node.type == M.TreeType.ROOT) then
     return M.opts.hl_node_root
-  elseif (type == M.NodeType.PARENT) then
+  elseif (node.type == M.TreeType.LOCAL_ROOT) then
+    return M.opts.hl_node_root
+  elseif (node.children ~= nil) then
     return M.opts.hl_node_parent
-  elseif (type == M.NodeType.LEAF) then
+  else
     return M.opts.hl_node_leaf
-  elseif (type == M.NodeType.LOCAL) then
-    return M.opts.hl_modifier_local
   end
 end
 
@@ -89,8 +87,9 @@ M.load_state = function()
     -- Main tree, used for when no specific project is wanted.
     tree = {
       contents = {
-        { text = 'Main', type = M.NodeType.ROOT },
+        { text = 'Main' },
       },
+      type = M.TreeType.ROOT,
       icon = M.opts.root_marker,
     },
 
@@ -130,9 +129,9 @@ M.load_state = function()
       notify('no local state', 4)
       M.local_tree = {
         contents = {
-          { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
-          { text = ' local', type = M.NodeType.LOCAL },
+          { text = cwd:match('^.+/(.+)$') },
         },
+        type = M.TreeType.LOCAL_ROOT,
         icon = M.opts.root_marker,
       }
     else
@@ -262,7 +261,7 @@ end
 
 M.Node = function(name, children)
   local contents = {
-    { text = name, type = M.NodeType.LEAF }
+    { text = name }
   }
   return {
     contents = contents,
@@ -306,8 +305,9 @@ M.wrap_project_tree_fn = function(f, save, tree, use_global)
       if (tree == nil) then
         tree = {
           contents = {
-            { text = cwd:match('^.+/(.+)$'), type = M.NodeType.ROOT },
+            { text = cwd:match('^.+/(.+)$') },
           },
+          type = M.TreeType.ROOT,
           icon = M.opts.root_marker,
         }
         M.state.projects[cwd] = tree
@@ -358,10 +358,6 @@ end
 local function push_node(parent, node)
   if (parent.children == nil) then
     parent.children = {}
-
-    if (parent.contents[1].type ~= M.NodeType.ROOT) then
-      parent.contents[1].type = M.NodeType.PARENT
-    end
   end
 
   parent.children[#parent.children + 1] = node
@@ -369,7 +365,7 @@ end
 
 -- Add a node as child of another node.
 local function input_node(tree, i, name)
-  local grand_parent, parent = M.get_node_and_parent_by_nb(tree, i)
+  local parent = M.get_node_by_nb(tree, i)
 
   if (parent == nil) then
     notify('input_node nope', 4)
@@ -380,10 +376,6 @@ local function input_node(tree, i, name)
 
   if (parent.children == nil) then
     parent.children = {}
-
-    if (grand_parent ~= nil) then
-      parent.contents[1].type = M.NodeType.PARENT
-    end
   end
 
   parent.children[#parent.children + 1] = node
@@ -414,7 +406,11 @@ end
 -- Remove a node at index i in the given tree.
 local function remove_node(tree, i)
   for k = i, #tree.children do
-    tree.children[i] = tree.children[i + 1]
+    tree.children[k] = tree.children[k + 1]
+  end
+
+  if (#tree.children == 0) then
+    tree.children = nil
   end
 end
 
@@ -453,7 +449,6 @@ local function delete_node(tree, i)
 
   if (#children == 0) then
     children = nil
-    parent.contents[1].type = M.NodeType.LEAF
   end
 
   parent.children = children
@@ -524,11 +519,12 @@ local function compute_node_name_and_hl(node)
   local name = ''
   local partial_hls = {}
 
+  local node_group = compute_hl(node)
   -- the icon goes first
   if (node.icon ~= nil) then
     name = node.icon
     partial_hls[#partial_hls + 1] = {
-      group = compute_hl(node.contents[1].type),
+      group = node_group,
       width = #name,
     }
   end
@@ -538,15 +534,29 @@ local function compute_node_name_and_hl(node)
     name = name .. content.text
 
     partial_hls[#partial_hls + 1] = {
-      group = compute_hl(content.type),
+      group = node_group,
       width = #content.text
     }
   end
 
-  -- special case for the first highlight: if the node doesn’t have children nor data, we make its name grey instead to
-  -- make it visible that it doesn’t have anything relevant right now
-  if (node.data == nil and node.children == nil) then
-    partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_modifier_empty
+  -- special case for the first highlight:
+  if (node.type == nil) then
+    if (node.children ~= nil) then
+      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_node_parent
+    elseif (node.data == nil) then
+      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_modifier_empty
+    end
+  end
+
+  -- special marker for local roots
+  if (node.type == M.TreeType.LOCAL_ROOT) then
+    local marker = ' ' .. M.opts.local_marker
+    name = name .. marker
+
+    partial_hls[#partial_hls + 1] = {
+      group = M.opts.hl_modifier_local,
+      width = #marker,
+    }
   end
 
   -- special marker for data
@@ -899,7 +909,6 @@ M.selected_move = function(tree, i, move_dir)
     else
       push_node(node, tree.selected.node)
     end
-
   end
 
   M.unselect_node(tree)
