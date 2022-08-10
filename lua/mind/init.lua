@@ -370,32 +370,27 @@ local function push_node(parent, node)
 end
 
 -- Add a node as child of another node.
-local function input_node(tree, i, name)
+local function push_tree(tree, i, name)
   local parent = M.get_node_by_nb(tree, i)
 
   if (parent == nil) then
-    notify('input_node nope', 4)
+    notify('push_tree nope', 4)
     return
   end
 
   local node = M.Node(name, nil)
 
-  if (parent.children == nil) then
-    parent.children = {}
-  end
-
-  parent.children[#parent.children + 1] = node
-  parent.is_expanded = true
+  push_node(parent, node)
 
   M.rerender(tree)
 end
 
 -- Ask the user for input and add as a node at the current location.
-M.input_node_cursor = function(tree)
+M.push_tree_cursor = function(tree)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.ui.input({ prompt = 'Node name: ' }, function(input)
     if (input ~= nil) then
-      input_node(tree, line, input)
+      push_tree(tree, line, input)
     end
   end)
 end
@@ -407,6 +402,20 @@ local function find_parent_index(tree, node)
       return i
     end
   end
+end
+
+M.insert_cursor = function(tree, dir)
+  -- FIXME: check dir; if it’s inside, we can just push to the current node; otherwise, we need to check before / after
+  -- FIXME: to change the index accordingly.
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local node = M.get_node_by_nb(tree, line)
+  local index = find_parent_index(tree, node)
+
+  vim.ui.input({ prompt = 'Node name: ' }, function(input)
+    if (input ~= nil) then
+      push_tree(tree, line, input)
+    end
+  end)
 end
 
 -- Remove a node at index i in the given tree.
@@ -690,7 +699,7 @@ M.open_tree = function(tree, data_dir, default_keys)
     vim.keymap.set('n', 'q', function() M.close(tree) end, { buffer = true, noremap = true, silent = true })
 
     vim.keymap.set('n', 'a', function()
-      M.input_node_cursor(tree)
+      M.push_tree_cursor(tree)
       M.save_state()
     end, { buffer = true, noremap = true, silent = true })
 
@@ -920,6 +929,87 @@ end
 M.selected_move_cursor = function(tree, move_dir)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
   M.selected_move(tree, line, move_dir)
+end
+
+M.KeymapSelector = {
+  NORMAL,
+  SELECTION,
+}
+
+-- Keymaps.
+M.keymaps = {
+  current = M.KeymapSelector.NORMAL,
+  normal = {},
+  selection = {}
+}
+
+local commands = {
+  toggle_node = function(tree)
+    M.toggle_node_cursor(tree)
+    M.save_state()
+  end,
+
+  quit = function(tree)
+    M.close(tree)
+  end,
+
+  push = function(tree)
+    M.push_tree_cursor(tree)
+    M.save_state()
+  end,
+
+  delete = function(tree)
+    M.delete_node_cursor(tree)
+    M.save_state()
+  end
+
+  rename = function(tree)
+    M.rename_node_cursor(tree)
+    M.save_state()
+  end
+
+  open_data = function(tree, data_dir)
+    M.open_data_cursor(tree, data_dir)
+    M.save_state()
+  end
+
+  change_icon = function(tree)
+    M.change_icon_node_cursor(tree)
+    M.save_state()
+  end
+
+  select = function(tree)
+    M.toggle_select_node_cursor(tree)
+  end
+
+  move_above = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.ABOVE)
+    M.save_state()
+  end
+
+  move_below = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.BELOW)
+    M.save_state()
+  end
+
+  move_inside = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.INSIDE)
+    M.save_state()
+  end
+}
+
+local function create_default_keymaps()
+  local normal = {
+    ['<tab>'] =
+  }
+end
+
+local function set_keymap(selector)
+  M.keymaps.current = selector
+end
+
+local function get_keymap()
+  return M.keymaps[M.keymaps.current]
 end
 
 return M
