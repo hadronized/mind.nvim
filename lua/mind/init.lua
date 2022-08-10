@@ -43,8 +43,11 @@ local defaults = {
     normal = {
       ['<cr>'] = 'open_data',
       ['<tab>'] = 'toggle_node',
-      i = 'push',
+      I = 'add_inside_start',
+      i = 'add_inside_end',
       d = 'delete',
+      O = 'add_above',
+      o = 'add_below',
       q = 'quit',
       r = 'rename',
       R = 'change_icon',
@@ -52,9 +55,10 @@ local defaults = {
     },
 
     selection = {
-      i = 'move_inside',
-      o = 'move_below',
+      I = 'move_inside_start',
+      i = 'move_inside_end',
       O = 'move_above',
+      o = 'move_below',
       q = 'quit',
       x = 'select',
     },
@@ -69,7 +73,8 @@ M.TreeType = {
 M.MoveDir = {
   ABOVE = 0,
   BELOW = 1,
-  INSIDE = 2,
+  INSIDE_START = 2,
+  INSIDE_END = 3,
 }
 
 local commands = {
@@ -82,15 +87,30 @@ local commands = {
     M.close(tree)
   end,
 
-  push = function(tree)
-    M.push_tree_cursor(tree)
+  add_above = function(tree)
+    M.push_tree_cursor(tree, M.MoveDir.ABOVE)
+    M.save_state()
+  end,
+
+  add_below = function(tree)
+    M.push_tree_cursor(tree, M.MoveDir.BELOW)
+    M.save_state()
+  end,
+
+  add_inside_start = function(tree)
+    M.push_tree_cursor(tree, M.MoveDir.INSIDE_START)
+    M.save_state()
+  end,
+
+  add_inside_end = function(tree)
+    M.push_tree_cursor(tree, M.MoveDir.INSIDE_END)
     M.save_state()
   end,
 
   delete = function(tree)
     M.delete_node_cursor(tree)
     M.save_state()
-  end;
+  end,
 
   rename = function(tree)
     M.rename_node_cursor(tree)
@@ -121,8 +141,13 @@ local commands = {
     M.save_state()
   end,
 
-  move_inside = function(tree)
-    M.selected_move_cursor(tree, M.MoveDir.INSIDE)
+  move_inside_start = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.INSIDE_START)
+    M.save_state()
+  end,
+
+  move_inside_end = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.INSIDE_END)
     M.save_state()
   end,
 }
@@ -145,7 +170,6 @@ local function init_keymaps()
 end
 
 local function set_keymap(selector)
-  notify('switching keymap to ' .. tostring(selector))
   M.keymaps.selector = selector
 end
 
@@ -486,39 +510,27 @@ M.get_node_and_parent_by_nb = function(tree, i)
   return parent, node
 end
 
--- Add a node as child of another node.
-local function push_node(parent, node)
-  if (parent.children == nil) then
-    parent.children = {}
+-- Insert a node at index i in the given tree.
+--
+-- If i is negative, it starts after the end.
+local function insert_node(tree, i, node)
+  local prev = node
+
+  if (tree.children == nil) then
+    tree.children = {}
   end
 
-  parent.children[#parent.children + 1] = node
-end
-
--- Add a node as child of another node.
-local function push_tree(tree, i, name)
-  local parent = M.get_node_by_nb(tree, i)
-
-  if (parent == nil) then
-    notify('push_tree nope', 4)
-    return
+  if i < 0 then
+    i = #tree.children - i
   end
 
-  local node = M.Node(name, nil)
+  for k = i, #tree.children do
+    local n = tree.children[k]
+    tree.children[k] = prev
+    prev = n
+  end
 
-  push_node(parent, node)
-
-  M.rerender(tree)
-end
-
--- Ask the user for input and add as a node at the current location.
-M.push_tree_cursor = function(tree)
-  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  vim.ui.input({ prompt = 'Node name: ' }, function(input)
-    if (input ~= nil) then
-      push_tree(tree, line, input)
-    end
-  end)
+  tree.children[#tree.children + 1] = prev
 end
 
 -- Find the parent index of a node in its parent’s children.
@@ -530,16 +542,42 @@ local function find_parent_index(tree, node)
   end
 end
 
-M.insert_cursor = function(tree, dir)
-  -- FIXME: check dir; if it’s inside, we can just push to the current node; otherwise, we need to check before / after
-  -- FIXME: to change the index accordingly.
-  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  local node = M.get_node_by_nb(tree, line)
-  local index = find_parent_index(tree, node)
+-- Add a node as child of another node.
+local function push_tree(tree, i, name, dir)
+  local parent, n = M.get_node_and_parent_by_nb(tree, i)
 
+  if (n == nil) then
+    notify('push_tree nope', vim.log.levels.ERROR)
+    return
+  end
+
+  local node = M.Node(name, nil)
+
+  if (dir == M.MoveDir.INSIDE_START) then
+    insert_node(n, 1, node)
+  elseif (dir == M.MoveDir.INSIDE_END) then
+    insert_node(n, -1, node)
+  elseif (parent ~= nil) then
+    local index = find_parent_index(parent, n)
+
+    if (dir == M.MoveDir.ABOVE) then
+      insert_node(parent, index, node)
+    elseif (dir == M.MoveDir.BELOW) then
+      insert_node(parent, index + 1, node)
+    end
+  else
+    notify('forbidden node creation', vim.log.levels.WARN)
+  end
+
+  M.rerender(tree)
+end
+
+-- Ask the user for input and the node in the tree at the given direction.
+M.push_tree_cursor = function(tree, dir)
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.ui.input({ prompt = 'Node name: ' }, function(input)
     if (input ~= nil) then
-      push_tree(tree, line, input)
+      push_tree(tree, line, input, dir)
     end
   end)
 end
@@ -553,19 +591,6 @@ local function remove_node(tree, i)
   if (#tree.children == 0) then
     tree.children = nil
   end
-end
-
--- Insert a node at index i in the given tree.
-local function insert_node(tree, i, node)
-  local prev = node
-
-  for k = i, #tree.children do
-    local n = tree.children[k]
-    tree.children[k] = prev
-    prev = n
-  end
-
-  tree.children[#tree.children + 1] = prev
 end
 
 -- Delete a node at a given location.
@@ -1014,11 +1039,14 @@ M.selected_move = function(tree, i, move_dir)
     elseif (move_dir == M.MoveDir.ABOVE) then
       move_source_target_same_tree(parent, selected_i, node_i)
     else
-      -- first remove the node
+      -- we move inside, so first remove the node
       remove_node(parent, selected_i)
 
-      -- then push it into the target node
-      push_node(node, tree.selected.node)
+      if (move_dir == M.MoveDir.INSIDE_START) then
+        insert_node(node, 1, tree.selected.node)
+      elseif (move_dir == M.MoveDir.INSIDE_END) then
+        insert_node(node, -1, tree.selected.node)
+      end
     end
   else
     -- first, remove the node in its parent
@@ -1032,8 +1060,10 @@ M.selected_move = function(tree, i, move_dir)
       insert_node(parent, node_i + 1, tree.selected.node)
     elseif (move_dir == M.MoveDir.ABOVE) then
       insert_node(parent, node_i, tree.selected.node)
-    else
-      push_node(node, tree.selected.node)
+    elseif (move_dir == M.MoveDir.INSIDE_START) then
+      insert_node(node, 1, tree.selected.node)
+    elseif (move_dir == M.MoveDir.INSIDE_END) then
+      insert_node(node, -1, tree.selected.node)
     end
   end
 
