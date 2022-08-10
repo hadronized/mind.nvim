@@ -39,7 +39,26 @@ local defaults = {
   hl_modifier_selected = 'Error',
 
   -- keybindings stuff
-  use_default_keys = true,
+  keymaps = {
+    normal = {
+      ['<cr>'] = 'open_data',
+      ['<tab>'] = 'toggle_node',
+      i = 'push',
+      d = 'delete',
+      q = 'quit',
+      r = 'rename',
+      R = 'change_icon',
+      x = 'select',
+    },
+
+    selection = {
+      i = 'move_inside',
+      o = 'move_below',
+      O = 'move_above',
+      q = 'quit',
+      x = 'select',
+    },
+  }
 }
 
 M.TreeType = {
@@ -52,6 +71,108 @@ M.MoveDir = {
   BELOW = 1,
   INSIDE = 2,
 }
+
+local commands = {
+  toggle_node = function(tree)
+    M.toggle_node_cursor(tree)
+    M.save_state()
+  end,
+
+  quit = function(tree)
+    M.close(tree)
+  end,
+
+  push = function(tree)
+    M.push_tree_cursor(tree)
+    M.save_state()
+  end,
+
+  delete = function(tree)
+    M.delete_node_cursor(tree)
+    M.save_state()
+  end;
+
+  rename = function(tree)
+    M.rename_node_cursor(tree)
+    M.save_state()
+  end,
+
+  open_data = function(tree, data_dir)
+    M.open_data_cursor(tree, data_dir)
+    M.save_state()
+  end,
+
+  change_icon = function(tree)
+    M.change_icon_node_cursor(tree)
+    M.save_state()
+  end,
+
+  select = function(tree)
+    M.toggle_select_node_cursor(tree)
+  end,
+
+  move_above = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.ABOVE)
+    M.save_state()
+  end,
+
+  move_below = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.BELOW)
+    M.save_state()
+  end,
+
+  move_inside = function(tree)
+    M.selected_move_cursor(tree, M.MoveDir.INSIDE)
+    M.save_state()
+  end,
+}
+
+M.KeymapSelector = {
+  NORMAL = 'normal',
+  SELECTION = 'selection',
+}
+
+-- Keymaps.
+M.keymaps = {
+  selector = M.KeymapSelector.NORMAL,
+  normal = {},
+  selection = {},
+}
+
+local function init_keymaps()
+  M.keymaps.normal = M.opts.keymaps.normal
+  M.keymaps.selection = M.opts.keymaps.selection
+end
+
+local function set_keymap(selector)
+  notify('switching keymap to ' .. tostring(selector))
+  M.keymaps.selector = selector
+end
+
+local function get_keymap()
+  return M.keymaps[M.keymaps.selector]
+end
+
+-- Precompute keymaps.
+--
+-- This function will scan the keymaps and will replace the command name with the real command function.
+local function precompute_keymaps()
+  for key, _ in pairs(M.keymaps.normal) do
+    local cmd = commands[M.keymaps.normal[key]]
+
+    if (cmd ~= nil) then
+      M.keymaps.normal[key] = cmd
+    end
+  end
+
+  for key, _ in pairs(M.keymaps.selection) do
+    local cmd = commands[M.keymaps.selection[key]]
+
+    if (cmd ~= nil) then
+      M.keymaps.selection[key] = cmd
+    end
+  end
+end
 
 local function compute_hl(node)
   if (node.type == M.TreeType.ROOT) then
@@ -75,7 +196,12 @@ M.setup = function(opts)
 
   expand_opts_paths()
 
+  -- load tree state
   M.load_state()
+
+  -- keymaps
+  init_keymaps()
+  precompute_keymaps()
 end
 
 -- Load the state.
@@ -370,32 +496,27 @@ local function push_node(parent, node)
 end
 
 -- Add a node as child of another node.
-local function input_node(tree, i, name)
+local function push_tree(tree, i, name)
   local parent = M.get_node_by_nb(tree, i)
 
   if (parent == nil) then
-    notify('input_node nope', 4)
+    notify('push_tree nope', 4)
     return
   end
 
   local node = M.Node(name, nil)
 
-  if (parent.children == nil) then
-    parent.children = {}
-  end
-
-  parent.children[#parent.children + 1] = node
-  parent.is_expanded = true
+  push_node(parent, node)
 
   M.rerender(tree)
 end
 
 -- Ask the user for input and add as a node at the current location.
-M.input_node_cursor = function(tree)
+M.push_tree_cursor = function(tree)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.ui.input({ prompt = 'Node name: ' }, function(input)
     if (input ~= nil) then
-      input_node(tree, line, input)
+      push_tree(tree, line, input)
     end
   end)
 end
@@ -407,6 +528,20 @@ local function find_parent_index(tree, node)
       return i
     end
   end
+end
+
+M.insert_cursor = function(tree, dir)
+  -- FIXME: check dir; if it’s inside, we can just push to the current node; otherwise, we need to check before / after
+  -- FIXME: to change the index accordingly.
+  local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local node = M.get_node_by_nb(tree, line)
+  local index = find_parent_index(tree, node)
+
+  vim.ui.input({ prompt = 'Node name: ' }, function(input)
+    if (input ~= nil) then
+      push_tree(tree, line, input)
+    end
+  end)
 end
 
 -- Remove a node at index i in the given tree.
@@ -665,7 +800,40 @@ M.rerender = function(tree)
   M.render(tree, 0)
 end
 
-M.open_tree = function(tree, data_dir, default_keys)
+-- Insert keymaps into the given buffer.
+local function insert_keymaps(bufnr, tree, data_dir)
+  local keyset = {}
+
+  for key, _ in pairs(M.keymaps.normal) do
+    keyset[key] = true
+  end
+
+  for key, _ in pairs(M.keymaps.selection) do
+    keyset[key] = true
+  end
+
+  for key, _ in pairs(keyset) do
+    vim.keymap.set('n', key, function()
+      local keymap = get_keymap()
+
+      if (keymap == nil) then
+        notify('no active keymap', vim.log.levels.WARN)
+        return
+      end
+
+      local cmd = keymap[key]
+
+      if (cmd == nil) then
+        notify('no command bound to ' .. tostring(key), vim.log.levels.WARN)
+        return
+      end
+
+      cmd(tree, data_dir)
+    end, { buffer = bufnr, noremap = true, silent = true })
+  end
+end
+
+M.open_tree = function(tree, data_dir)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
   vim.api.nvim_win_set_width(0, M.opts.width)
@@ -680,59 +848,8 @@ M.open_tree = function(tree, data_dir, default_keys)
   -- tree
   M.render(tree, bufnr)
 
-  -- keymaps for debugging
-  if (default_keys) then
-    vim.keymap.set('n', '<tab>', function()
-      M.toggle_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'q', function() M.close(tree) end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'a', function()
-      M.input_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'd', function()
-      M.delete_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'r', function()
-      M.rename_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', '<cr>', function()
-      M.open_data_cursor(tree, data_dir)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'I', function()
-      M.change_icon_node_cursor(tree)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'x', function()
-      M.toggle_select_node_cursor(tree)
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'o', function()
-      M.selected_move_cursor(tree, M.MoveDir.BELOW)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'O', function()
-      M.selected_move_cursor(tree, M.MoveDir.ABOVE)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-
-    vim.keymap.set('n', 'i', function()
-      M.selected_move_cursor(tree, M.MoveDir.INSIDE)
-      M.save_state()
-    end, { buffer = true, noremap = true, silent = true })
-  end
+  -- keymaps
+  insert_keymaps(bufnr, tree, data_dir)
 end
 
 local function get_project_data_dir()
@@ -745,11 +862,11 @@ local function get_project_data_dir()
 end
 
 M.open_main = function()
-  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.data_dir, M.opts.use_default_keys) end)
+  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.data_dir) end)
 end
 
 M.open_project = function(use_global)
-  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, get_project_data_dir(), M.opts.use_default_keys) end, false, nil, use_global)
+  M.wrap_project_tree_fn(function(tree) M.open_tree(tree, get_project_data_dir()) end, false, nil, use_global)
 end
 
 M.close = function(tree)
@@ -775,6 +892,9 @@ local function select_node(tree, i)
   if (node ~= nil) then
     node.is_selected = true
     tree.selected = { parent = parent, node = node }
+
+    set_keymap(M.KeymapSelector.SELECTION)
+
     M.rerender(tree)
   end
 end
@@ -789,6 +909,9 @@ M.unselect_node = function(tree)
   if (tree.selected ~= nil) then
     tree.selected.node.is_selected = nil
     tree.selected = nil
+
+    set_keymap(M.KeymapSelector.NORMAL)
+
     M.rerender(tree)
   end
 end
