@@ -201,11 +201,15 @@ end
 
 -- Create a new random file in a given directory.
 --
--- Return the path to the created file.
-local function new_data_file(dir, name, content)
+-- Return the path to the created file, expanded if required.
+local function new_data_file(dir, name, content, should_expand)
   local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name
-  local file_path = path:new(dir, filename):expand()
+  local p = path:new(dir, filename)
+  local file_path = (should_expand and p:expand()) or tostring(p)
 
+  print('dir', dir)
+  print('filename', filename)
+  print('file_path', file_path)
   local file = io.open(file_path, 'w')
 
   if (file == nil) then
@@ -229,8 +233,10 @@ local function open_data(tree, i, dir)
 
   local data = node.data
   if (data == nil) then
-    contents = string.format(M.opts.data_header, node.contents[1].text)
-    data = new_data_file(dir, node.contents[1].text .. M.opts.data_extension, contents)
+    local contents = string.format(M.opts.data_header, node.contents[1].text)
+    local should_expand = tree.type ~= M.TreeType.LOCAL_ROOT
+    print('should_expand', should_expand)
+    data = new_data_file(dir, node.contents[1].text .. M.opts.data_extension, contents, should_expand)
 
     if (data == nil) then
       return
@@ -730,12 +736,9 @@ M.open_tree = function(tree, data_dir, default_keys)
 end
 
 local function get_project_data_dir()
-  local cwd = vim.fn.getcwd()
-  local local_mind = path:new(cwd, '.mind/data')
+  local local_mind = path:new('.mind/data')
   if (local_mind:is_dir()) then
-    return path:new(cwd, '.mind/data'):expand()
-  else
-    return nil
+    return tostring(local_mind)
   end
 
   return M.opts.data_dir
