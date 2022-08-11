@@ -6,72 +6,6 @@ local function notify(msg, lvl)
   vim.notify(msg, lvl, { title = 'Mind', icon = '' })
 end
 
--- FIXME: recursively ensure that the paths are created
--- FIXME: group settings by categories, like opts.ui.*, opts.fs.*, opts.edit.*, etc. etc.
-local defaults = {
-  -- state & data stuff
-  state_path = '~/.local/share/mind.nvim/mind.json',
-  data_dir = '~/.local/share/mind.nvim/data',
-
-  -- edition stuff
-  data_extension = '.md',
-  data_header = '# %s',
-
-  -- UI stuff
-  width = 30,
-  root_marker = ' ',
-  local_marker = 'local',
-  data_marker = '',
-  selected_marker = '',
-
-  -- highlight stuff
-  hl_mark_closed = 'LineNr',
-  hl_mark_open = 'LineNr',
-  hl_node_root = 'Function',
-  hl_node_leaf = 'String',
-  hl_node_parent = 'Title',
-  hl_modifier_local = 'Comment',
-  hl_modifier_grey = 'Grey',
-  hl_modifier_empty = 'CursorLineNr',
-  hl_modifier_selected = 'Error',
-
-  -- keybindings stuff
-  keymaps = {
-    -- keybindings when navigating the tree normally
-    normal = {
-      ['<cr>'] = 'open_data',
-      ['<tab>'] = 'toggle_node',
-      ['/'] = 'node_at_path',
-      I = 'add_inside_start',
-      i = 'add_inside_end',
-      d = 'delete',
-      O = 'add_above',
-      o = 'add_below',
-      q = 'quit',
-      r = 'rename',
-      R = 'change_icon',
-      x = 'select',
-    },
-
-    -- keybindings when a node is selected
-    selection = {
-      I = 'move_inside_start',
-      i = 'move_inside_end',
-      O = 'move_above',
-      o = 'move_below',
-      q = 'quit',
-      x = 'select',
-    },
-
-    -- keybindings when a path is selected
-    by_path = {
-      d = 'delete',
-      r = 'rename',
-      q = 'quit',
-    }
-  }
-}
-
 M.TreeType = {
   ROOT = 0,
   LOCAL_ROOT = 1,
@@ -280,23 +214,24 @@ end
 
 local function compute_hl(node)
   if (node.type == M.TreeType.ROOT) then
-    return M.opts.hl_node_root
+    return M.opts.ui.highlight.node_root
   elseif (node.type == M.TreeType.LOCAL_ROOT) then
-    return M.opts.hl_node_root
+    return M.opts.ui.highlight.node_root
   elseif (node.children ~= nil) then
-    return M.opts.hl_node_parent
+    return M.opts.ui.highlight.node_parent
   else
-    return M.opts.hl_node_leaf
+    return M.opts.ui.highlight.node_leaf
   end
 end
 
 local function expand_opts_paths()
-  M.opts.state_path = vim.fn.expand(M.opts.state_path)
-  M.opts.data_dir = vim.fn.expand(M.opts.data_dir)
+  M.opts.persistence.state_path = vim.fn.expand(M.opts.persistence.state_path)
+  M.opts.persistence.data_dir = vim.fn.expand(M.opts.persistence.data_dir)
 end
 
 M.setup = function(opts)
-  M.opts = setmetatable(opts or {}, {__index = defaults})
+  M.opts = vim.tbl_deep_extend('force', require'mind.defaults', opts or {})
+  print('default path', M.opts.persistence.state_path)
 
   expand_opts_paths()
 
@@ -311,7 +246,7 @@ end
 -- Load the state.
 --
 -- If CWD has a .mind/, the projects part of the state is overriden with its contents. However, the main tree remains in
--- M.opts.state_path.
+-- in global state path.
 M.load_state = function()
   M.state = {
     -- Main tree, used for when no specific project is wanted.
@@ -320,7 +255,7 @@ M.load_state = function()
         { text = 'Main' },
       },
       type = M.TreeType.ROOT,
-      icon = M.opts.root_marker,
+      icon = M.opts.ui.root_marker,
     },
 
     -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
@@ -330,15 +265,15 @@ M.load_state = function()
   -- Local tree, for local projects.
   M.local_tree = nil
 
-  if (M.opts == nil or M.opts.state_path == nil) then
-    notify('cannot load shit', 4)
+  if (M.opts == nil or M.opts.persistence.state_path == nil) then
+    notify('cannot load shit', vim.log.levels.ERROR)
     return
   end
 
-  local file = io.open(M.opts.state_path, 'r')
+  local file = io.open(M.opts.persistence.state_path, 'r')
 
   if (file == nil) then
-    notify('no global state', 4)
+    notify('no global state', vim.log.levels.ERROR)
   else
     local encoded = file:read()
     file:close()
@@ -362,7 +297,7 @@ M.load_state = function()
           { text = cwd:match('^.+/(.+)$') },
         },
         type = M.TreeType.LOCAL_ROOT,
-        icon = M.opts.root_marker,
+        icon = M.opts.ui.root_marker,
       }
     else
       local encoded = file:read()
@@ -396,16 +331,16 @@ local function pre_save()
 end
 
 M.save_state = function()
-  if (M.opts == nil or M.opts.state_path == nil) then
+  if (M.opts == nil or M.opts.persistence.state_path == nil) then
     return
   end
 
   pre_save()
 
-  local file = io.open(M.opts.state_path, 'w')
+  local file = io.open(M.opts.persistence.state_path, 'w')
 
   if (file == nil) then
-    notify(string.format('cannot save state at %s', M.opts.state_path), 4)
+    notify(string.format('cannot save state at %s', M.opts.persistence.state_path), 4)
   else
     local encoded = vim.json.encode(M.state)
     file:write(encoded)
@@ -460,9 +395,9 @@ local function open_data(tree, i, dir)
 
   local data = node.data
   if (data == nil) then
-    local contents = string.format(M.opts.data_header, node.contents[1].text)
+    local contents = string.format(M.opts.edit.data_header, node.contents[1].text)
     local should_expand = tree.type ~= M.TreeType.LOCAL_ROOT
-    data = new_data_file(dir, node.contents[1].text .. M.opts.data_extension, contents, should_expand)
+    data = new_data_file(dir, node.contents[1].text .. M.opts.edit.data_extension, contents, should_expand)
 
     if (data == nil) then
       return
@@ -540,7 +475,7 @@ M.wrap_project_tree_fn = function(f, save, tree, use_global)
             { text = cwd:match('^.+/(.+)$') },
           },
           type = M.TreeType.ROOT,
-          icon = M.opts.root_marker,
+          icon = M.opts.ui.root_marker,
         }
         M.state.projects[cwd] = tree
       end
@@ -831,41 +766,41 @@ local function compute_node_name_and_hl(node)
   -- special case for the first highlight:
   if (node.type == nil) then
     if (node.children ~= nil) then
-      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_node_parent
+      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.ui.highlight.node_parent
     elseif (node.data == nil) then
-      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.hl_modifier_empty
+      partial_hls[#partial_hls - #node.contents + 1].group = M.opts.ui.highlight.modifier_empty
     end
   end
 
   -- special marker for local roots
   if (node.type == M.TreeType.LOCAL_ROOT) then
-    local marker = ' ' .. M.opts.local_marker
+    local marker = ' ' .. M.opts.ui.local_marker
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = M.opts.hl_modifier_local,
+      group = M.opts.ui.highlight.local_marker,
       width = #marker,
     }
   end
 
   -- special marker for data
   if (node.data ~= nil) then
-    local marker = ' ' .. M.opts.data_marker
+    local marker = ' ' .. M.opts.ui.data_marker
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = M.opts.hl_modifier_grey,
+      group = M.opts.ui.highlight.data_marker,
       width = #marker,
     }
   end
 
   -- special marker for selection
   if (node.is_selected) then
-    local marker = ' ' .. M.opts.selected_marker
+    local marker = ' ' .. M.opts.ui.select_marker
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = M.opts.hl_modifier_selected,
+      group = M.opts.ui.highlight.select_marker,
       width = #marker,
     }
   end
@@ -883,7 +818,7 @@ local function render_node(node, depth, lines, hls)
     if (node.is_expanded) then
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = M.opts.hl_mark_open, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      hls[#hls + 1] = { group = M.opts.ui.highlight.open_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
@@ -899,7 +834,7 @@ local function render_node(node, depth, lines, hls)
     else
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = M.opts.hl_mark_closed, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+      hls[#hls + 1] = { group = M.opts.ui.highlight.closed_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
@@ -988,7 +923,7 @@ end
 M.open_tree = function(tree, data_dir)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
-  vim.api.nvim_win_set_width(0, M.opts.width)
+  vim.api.nvim_win_set_width(0, M.opts.ui.width)
 
   -- buffer
   local bufnr = vim.api.nvim_create_buf(false, false)
@@ -1010,11 +945,11 @@ local function get_project_data_dir()
     return tostring(local_mind)
   end
 
-  return M.opts.data_dir
+  return M.opts.persistence.data_dir
 end
 
 M.open_main = function()
-  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.data_dir) end)
+  M.wrap_main_tree_fn(function(tree) M.open_tree(tree, M.opts.persistence.data_dir) end)
 end
 
 M.open_project = function(use_global)
