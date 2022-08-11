@@ -37,9 +37,11 @@ local defaults = {
 
   -- keybindings stuff
   keymaps = {
+    -- keybindings when navigating the tree normally
     normal = {
       ['<cr>'] = 'open_data',
       ['<tab>'] = 'toggle_node',
+      ['/'] = 'node_at_path',
       I = 'add_inside_start',
       i = 'add_inside_end',
       d = 'delete',
@@ -51,6 +53,7 @@ local defaults = {
       x = 'select',
     },
 
+    -- keybindings when a node is selected
     selection = {
       I = 'move_inside_start',
       i = 'move_inside_end',
@@ -59,6 +62,13 @@ local defaults = {
       q = 'quit',
       x = 'select',
     },
+
+    -- keybindings when a path is selected
+    by_path = {
+      d = 'delete',
+      r = 'rename',
+      q = 'quit',
+    }
   }
 }
 
@@ -81,6 +91,7 @@ local commands = {
   end,
 
   quit = function(tree)
+    M.reset(tree)
     M.close(tree)
   end,
 
@@ -110,7 +121,12 @@ local commands = {
   end,
 
   rename = function(tree)
-    M.rename_node_cursor(tree)
+    M.conditionally_run_by_path(
+      function() M.rename_node_cursor(tree) end,
+      function(node) M.rename_node(tree, node) end
+    )
+
+    M.reset(tree)
     M.save_state()
   end,
 
@@ -147,11 +163,20 @@ local commands = {
     M.selected_move_cursor(tree, M.MoveDir.INSIDE_END)
     M.save_state()
   end,
+
+  node_at_path = function(tree)
+    vim.ui.input({ prompt = 'Path: ', default = '/' }, function(input)
+      if (input ~= nil) then
+        M.enable_by_path(input, M.get_node_by_path(tree, input))
+      end
+    end)
+  end,
 }
 
 M.KeymapSelector = {
   NORMAL = 'normal',
   SELECTION = 'selection',
+  BY_PATH = 'by_path',
 }
 
 -- Keymaps.
@@ -159,11 +184,13 @@ M.keymaps = {
   selector = M.KeymapSelector.NORMAL,
   normal = {},
   selection = {},
+  by_path = {},
 }
 
 local function init_keymaps()
   M.keymaps.normal = M.opts.keymaps.normal
   M.keymaps.selection = M.opts.keymaps.selection
+  M.keymaps.by_path = M.opts.keymaps.by_path
 end
 
 local function set_keymap(selector)
@@ -193,6 +220,62 @@ local function precompute_keymaps()
       M.keymaps.selection[key] = cmd
     end
   end
+
+  for key, _ in pairs(M.keymaps.by_path) do
+    local cmd = commands[M.keymaps.by_path[key]]
+
+    if (cmd ~= nil) then
+      M.keymaps.by_path[key] = cmd
+    end
+  end
+end
+
+-- Path selector.
+--
+-- When the path selector is set, we use the node as source of truth.
+M.ByPath = {
+  path = nil,
+  node = nil,
+}
+
+M.enable_by_path = function(path, node)
+  if (node == nil) then
+    notify(string.format('no %s found', path), vim.log.levels.ERROR)
+    return
+  end
+
+  notify('node by path ' .. path)
+  M.ByPath.path = path
+  M.ByPath.node = node
+
+  set_keymap(M.KeymapSelector.BY_PATH)
+end
+
+-- Reset by path.
+local function reset_by_path()
+  M.ByPath.path = nil
+  M.ByPath.node = nil
+end
+
+-- Run a function that either works with the cursor or a by-path node, depending on whether a by-path is set.
+M.conditionally_run_by_path = function(with_cursor, with_node)
+  if (M.ByPath.node == nil) then
+    with_cursor()
+  else
+    with_node(M.ByPath.node)
+  end
+end
+
+-- Reset keymaps and modes.
+M.reset = function(tree)
+  set_keymap(M.KeymapSelector.NORMAL)
+
+  if (tree.selected ~= nil) then
+    tree.selected.node.is_selected = nil
+    tree.selected = nil
+  end
+
+  reset_by_path()
 end
 
 local function compute_hl(node)
@@ -354,9 +437,6 @@ local function new_data_file(dir, name, content, should_expand)
   local p = path:new(dir, filename)
   local file_path = (should_expand and p:expand()) or tostring(p)
 
-  print('dir', dir)
-  print('filename', filename)
-  print('file_path', file_path)
   local file = io.open(file_path, 'w')
 
   if (file == nil) then
@@ -382,7 +462,6 @@ local function open_data(tree, i, dir)
   if (data == nil) then
     local contents = string.format(M.opts.data_header, node.contents[1].text)
     local should_expand = tree.type ~= M.TreeType.LOCAL_ROOT
-    print('should_expand', should_expand)
     data = new_data_file(dir, node.contents[1].text .. M.opts.data_extension, contents, should_expand)
 
     if (data == nil) then
@@ -508,6 +587,43 @@ M.get_node_and_parent_by_nb = function(tree, i)
   return parent, node
 end
 
+local function get_node_by_path_(tree, paths, i)
+  if (i == #paths + 1) then
+    return tree
+  end
+
+  if (tree.children == nil) then
+    return nil
+  end
+
+  -- look for the child which name is the same as paths[1]
+  local segment = paths[i]
+  for _, child in ipairs(tree.children) do
+    if (child.contents[1].text == segment) then
+      local found = get_node_by_path_(child, paths, i + 1)
+
+      -- break the loop if we have found the node
+      if (found ~= nil) then
+        return found
+      end
+    end
+  end
+end
+
+-- Get a node by path.
+--
+-- A path starts with / and each part of the path is the name of the node.
+M.get_node_by_path = function(tree, path)
+  local split_path = vim.split(path, '/')
+
+  if (split_path[1] ~= '') then
+    notify('path must start with a leading slash (/)', vim.log.levels.WARN)
+    return
+  end
+
+  return get_node_by_path_(tree, split_path, 2)
+end
+
 -- Insert a node at index i in the given tree.
 --
 -- If i is negative, it starts after the end.
@@ -592,11 +708,11 @@ local function remove_node(tree, i)
 end
 
 -- Delete a node at a given location.
-local function delete_node(tree, i)
+local function delete_node_line(tree, i)
   local parent, node = M.get_node_and_parent_by_nb(tree, i)
 
   if (node == nil) then
-    notify('delete_node nope', 4)
+    notify('delete_node_line nope', 4)
     return
   end
 
@@ -623,18 +739,11 @@ end
 -- Delete the node under the cursor.
 M.delete_node_cursor = function(tree)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  delete_node(tree, line)
+  delete_node_line(tree, line)
 end
 
--- Rename a node at a given location.
-local function rename_node(tree, i)
-  local node = M.get_node_by_nb(tree, i)
-
-  if (node == nil) then
-    notify('rename_node nope', 4)
-    return
-  end
-
+-- Rename a node.
+M.rename_node = function(tree, node)
   vim.ui.input({ prompt = 'Rename node: ', default = node.contents[1].text }, function(input)
     if (input ~= nil) then
       node.contents[1].text = input
@@ -644,10 +753,22 @@ local function rename_node(tree, i)
   M.rerender(tree)
 end
 
+-- Rename a node at a given location.
+M.rename_node_line = function(tree, line)
+  local node = M.get_node_by_nb(tree, line)
+
+  if (node == nil) then
+    notify('rename_node_line nope', 4)
+    return
+  end
+
+  M.rename_node(tree, node)
+end
+
 -- Rename the node under the cursor.
 M.rename_node_cursor = function(tree)
   local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  rename_node(tree, line)
+  M.rename_node_line(tree, line)
 end
 
 -- Change a node’s icon at a given location.
@@ -666,7 +787,11 @@ local function change_icon_node(tree, i)
 
   vim.ui.input({ prompt = prompt }, function(input)
     if (input ~= nil) then
-      node.icon = input
+      if (input == ' ') then
+        node.icon = nil
+      else
+        node.icon = input
+      end
     end
   end)
 
@@ -832,6 +957,10 @@ local function insert_keymaps(bufnr, tree, data_dir)
   end
 
   for key, _ in pairs(M.keymaps.selection) do
+    keyset[key] = true
+  end
+
+  for key, _ in pairs(M.keymaps.by_path) do
     keyset[key] = true
   end
 
