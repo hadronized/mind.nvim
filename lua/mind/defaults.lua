@@ -1,4 +1,5 @@
--- default configuration options
+-- Default configuration options.
+
 return {
   -- persistence, both for the tree state and data files
   persistence = {

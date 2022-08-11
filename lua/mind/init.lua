@@ -1,4 +1,6 @@
 local path = require'plenary.path'
+local mind_node = require'mind.node'
+local mind_state = require'mind.state'
 
 local M = {}
 
@@ -21,7 +23,7 @@ M.MoveDir = {
 local commands = {
   toggle_node = function(tree)
     M.toggle_node_cursor(tree)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   quit = function(tree)
@@ -31,27 +33,27 @@ local commands = {
 
   add_above = function(tree)
     M.push_tree_cursor(tree, M.MoveDir.ABOVE)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   add_below = function(tree)
     M.push_tree_cursor(tree, M.MoveDir.BELOW)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   add_inside_start = function(tree)
     M.push_tree_cursor(tree, M.MoveDir.INSIDE_START)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   add_inside_end = function(tree)
     M.push_tree_cursor(tree, M.MoveDir.INSIDE_END)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   delete = function(tree)
     M.delete_node_cursor(tree)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   rename = function(tree)
@@ -61,17 +63,17 @@ local commands = {
     )
 
     M.reset(tree)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   open_data = function(tree, data_dir)
     M.open_data_cursor(tree, data_dir)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   change_icon = function(tree)
     M.change_icon_node_cursor(tree)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   select = function(tree)
@@ -80,22 +82,22 @@ local commands = {
 
   move_above = function(tree)
     M.selected_move_cursor(tree, M.MoveDir.ABOVE)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   move_below = function(tree)
     M.selected_move_cursor(tree, M.MoveDir.BELOW)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   move_inside_start = function(tree)
     M.selected_move_cursor(tree, M.MoveDir.INSIDE_START)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   move_inside_end = function(tree)
     M.selected_move_cursor(tree, M.MoveDir.INSIDE_END)
-    M.save_state()
+    mind_state.save_state(M.opts)
   end,
 
   node_at_path = function(tree)
@@ -236,132 +238,11 @@ M.setup = function(opts)
   expand_opts_paths()
 
   -- load tree state
-  M.load_state()
+  mind_state.load_state(M.opts)
 
   -- keymaps
   init_keymaps()
   precompute_keymaps()
-end
-
--- Load the state.
---
--- If CWD has a .mind/, the projects part of the state is overriden with its contents. However, the main tree remains in
--- in global state path.
-M.load_state = function()
-  M.state = {
-    -- Main tree, used for when no specific project is wanted.
-    tree = {
-      contents = {
-        { text = 'Main' },
-      },
-      type = M.TreeType.ROOT,
-      icon = M.opts.ui.root_marker,
-    },
-
-    -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
-    projects = {},
-  }
-
-  -- Local tree, for local projects.
-  M.local_tree = nil
-
-  if (M.opts == nil or M.opts.persistence.state_path == nil) then
-    notify('cannot load shit', vim.log.levels.ERROR)
-    return
-  end
-
-  local file = io.open(M.opts.persistence.state_path, 'r')
-
-  if (file == nil) then
-    notify('no global state', vim.log.levels.ERROR)
-  else
-    local encoded = file:read()
-    file:close()
-
-    if (encoded ~= nil) then
-      M.state = vim.json.decode(encoded)
-    end
-  end
-
-  -- if there is a local state, we get it and replace the M.state.projects[the_project] with it
-  local cwd = vim.fn.getcwd()
-  local local_mind = path:new(cwd, '.mind')
-  if (local_mind:is_dir()) then
-    -- we have a local mind; read the projects state from there
-    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
-
-    if (file == nil) then
-      notify('no local state', 4)
-      M.local_tree = {
-        contents = {
-          { text = cwd:match('^.+/(.+)$') },
-        },
-        type = M.TreeType.LOCAL_ROOT,
-        icon = M.opts.ui.root_marker,
-      }
-    else
-      local encoded = file:read()
-      file:close()
-
-      if (encoded ~= nil) then
-        M.local_tree = vim.json.decode(encoded)
-      end
-    end
-  end
-end
-
--- Function run to cleanse a tree before saving (some data shouldn’t be saved).
-local function pre_save()
-  if (M.state.tree.selected ~= nil) then
-    M.state.tree.selected.node.is_selected = nil
-    M.state.tree.selected = nil
-  end
-
-  if (M.local_tree ~= nil and M.local_tree.selected ~= nil) then
-    M.local_tree.selected.node.is_selected = nil
-    M.local_tree.selected = nil
-  end
-
-  for _, project in ipairs(M.state.projects) do
-    if (project.selected ~= nil) then
-      project.selected.node.is_selected = nil
-      project.selected = nil
-    end
-  end
-end
-
-M.save_state = function()
-  if (M.opts == nil or M.opts.persistence.state_path == nil) then
-    return
-  end
-
-  pre_save()
-
-  local file = io.open(M.opts.persistence.state_path, 'w')
-
-  if (file == nil) then
-    notify(string.format('cannot save state at %s', M.opts.persistence.state_path), 4)
-  else
-    local encoded = vim.json.encode(M.state)
-    file:write(encoded)
-    file:close()
-  end
-
-  -- if there is a local state, we write the local project
-  local cwd = vim.fn.getcwd()
-  local local_mind = path:new(cwd, '.mind')
-  if (local_mind:is_dir()) then
-    -- we have a local mind
-    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
-
-    if (file == nil) then
-      notify(string.format('cannot save local project at %s', cwd), 4)
-    else
-      local encoded = vim.json.encode(M.local_tree)
-      file:write(encoded)
-      file:close()
-    end
-  end
 end
 
 -- Create a new random file in a given directory.
@@ -442,7 +323,7 @@ end
 -- The `save` argument will automatically save the state after the function is done, if set to `true`.
 M.wrap_tree_fn = function(f, save)
   local cwd = vim.fn.getcwd()
-  local project_tree = M.state.projects[cwd]
+  local project_tree = mind_state.projects[cwd]
 
   if (project_tree == nil) then
     M.wrap_main_tree_fn(f, save)
@@ -453,10 +334,10 @@ end
 
 -- Wrap a function call expecting a tree with the main tree.
 M.wrap_main_tree_fn = function(f, save)
-  f(M.state.tree)
+  f(mind_state.state.tree)
 
   if (save) then
-    M.save_state()
+    mind_state.save_state(M.opts)
   end
 end
 
@@ -465,29 +346,29 @@ end
 -- If the projec tree doesn’t exist, it is automatically created.
 M.wrap_project_tree_fn = function(f, save, tree, use_global)
   if (tree == nil) then
-    if (M.local_tree == nil or use_global) then
+    if (mind_state.local_tree == nil or use_global) then
       local cwd = vim.fn.getcwd()
-      tree = M.state.projects[cwd]
+      tree = mind_state.projects[cwd]
 
       if (tree == nil) then
         tree = {
           contents = {
             { text = cwd:match('^.+/(.+)$') },
           },
-          type = M.TreeType.ROOT,
+          type = mind_node.TreeType.ROOT,
           icon = M.opts.ui.root_marker,
         }
-        M.state.projects[cwd] = tree
+        mind_state.projects[cwd] = tree
       end
     else
-      tree = M.local_tree
+      tree = mind_state.local_tree
     end
   end
 
   f(tree)
 
   if (save) then
-    M.save_state()
+    mind_state.save_state(M.opts)
   end
 end
 
