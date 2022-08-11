@@ -1,6 +1,3 @@
-local renderer = require'neo-tree.ui.renderer'
-local manager = require'neo-tree.sources.manager'
-local events = require'neo-tree.events'
 local path = require'plenary.path'
 
 local M = {}
@@ -285,7 +282,7 @@ M.load_state = function()
         icon = M.opts.root_marker,
       }
     else
-      encoded = file:read()
+      local encoded = file:read()
       file:close()
 
       if (encoded ~= nil) then
@@ -489,6 +486,7 @@ local function get_ith(parent, node, i)
 
   if (node.children ~= nil and node.is_expanded) then
     for _, child in ipairs(node.children) do
+      local p, n
       p, n, i = get_ith(node, child, i)
 
       if (n ~= nil) then
