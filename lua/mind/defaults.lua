@@ -73,7 +73,7 @@ return {
     normal = {
       ['<cr>'] = 'open_data',
       ['<tab>'] = 'toggle_node',
-      ['/'] = 'node_at_path',
+      ['/'] = 'select_path',
       I = 'add_inside_start',
       i = 'add_inside_end',
       d = 'delete',
@@ -94,12 +94,5 @@ return {
       q = 'quit',
       x = 'select',
     },
-
-    -- keybindings when a path is selected
-    by_path = {
-      d = 'delete',
-      r = 'rename',
-      q = 'quit',
-    }
   }
 }

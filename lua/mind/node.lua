@@ -85,21 +85,21 @@ end
 -- is the root and paths[2] is the name of the first child under the root.
 --
 -- The function stops when it arrives at the end of paths, that is, when i == #paths + 1.
-local function get_node_by_path_rec(tree, paths, i)
+local function get_node_by_path_rec(parent, tree, paths, i)
   if (i == #paths + 1) then
-    return tree
+    return parent, tree
   end
 
   -- no children, so this can’t be a solution
   if (tree.children == nil) then
-    return nil
+    return
   end
 
   -- look for the child which name is the same as paths[i]
   local segment = paths[i]
   for _, child in ipairs(tree.children) do
     if (child.contents[1].text == segment) then
-      return get_node_by_path_rec(child, paths, i + 1)
+      return get_node_by_path_rec(tree, child, paths, i + 1)
     end
   end
 end
@@ -109,7 +109,7 @@ end
 -- A path starts with / and each part of the path is the name of the node.
 M.get_node_by_path = function(tree, path)
   if (path == '/') then
-    return tree
+    return nil, tree
   end
 
   local split_path = vim.split(path, '/')
@@ -119,7 +119,7 @@ M.get_node_by_path = function(tree, path)
     return
   end
 
-  return get_node_by_path_rec(tree, split_path, 2)
+  return get_node_by_path_rec(nil, tree, split_path, 2)
 end
 
 -- Insert a node at index i in the given tree’s children.
@@ -177,7 +177,7 @@ M.find_parent_index = function(tree, node)
 end
 
 -- Move a source node at a target node in the same tree.
-local function move_source_target_same_tree(tree, src, tgt)
+M.move_source_target_same_tree = function(tree, src, tgt)
   -- do nothing if src == tgt
   if (src == tgt) then
     return
