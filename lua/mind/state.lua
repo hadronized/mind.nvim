@@ -1,8 +1,8 @@
+local M = {}
+
 local path = require'plenary.path'
 local notify = require'mind.notify'.notify
 local mind_node = require'mind.node'
-
-local M = {}
 
 -- Load the state.
 --
@@ -26,6 +26,9 @@ M.load_state = function(opts)
 
   -- Local tree, for local projects.
   M.local_tree = nil
+
+  -- required so that we can locate the file correctly if the user used ~ or relative paths
+  M.expand_opts_paths(opts)
 
   if (opts.persistence.state_path == nil) then
     notify('cannot load shit', vim.log.levels.ERROR)
@@ -53,12 +56,12 @@ M.load_state = function(opts)
     file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
 
     if (file == nil) then
-      notify('no local state', 4)
+      notify('no local state', vim.log.levels.ERROR)
       M.local_tree = {
         contents = {
           { text = cwd:match('^.+/(.+)$') },
         },
-        type = mind_tree.TreeType.LOCAL_ROOT,
+        type = mind_node.TreeType.LOCAL_ROOT,
         icon = opts.ui.root_marker,
       }
     else
@@ -70,6 +73,11 @@ M.load_state = function(opts)
       end
     end
   end
+end
+
+M.expand_opts_paths = function(opts)
+  opts.persistence.state_path = vim.fn.expand(opts.persistence.state_path)
+  opts.persistence.data_dir = vim.fn.expand(opts.persistence.data_dir)
 end
 
 -- Save the state.
@@ -130,6 +138,18 @@ M.pre_save = function()
       project.selected = nil
     end
   end
+end
+
+-- Get the project data directory.
+--
+-- If a local tree exists, its path data is returned. Otherwise, we use the one in opts.persistence.data_dir.
+M.get_project_data_dir = function(opts)
+  local local_mind = path:new('.mind/data')
+  if (local_mind:is_dir()) then
+    return tostring(local_mind)
+  end
+
+  return opts.persistence.data_dir
 end
 
 return M
