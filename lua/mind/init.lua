@@ -5,6 +5,27 @@ local mind_state = require'mind.state'
 
 local M = {}
 
+local function create_user_commands()
+  vim.api.nvim_create_user_command(
+    'MindOpenMain',
+    function()
+      require'mind'.open_main()
+    end,
+    { desc = 'Open the main Mind tree', }
+  )
+
+  vim.api.nvim_create_user_command(
+    'MindOpenProject',
+    function(opts)
+      require'mind'.open_project(opts.fargs[1] == 'global')
+    end,
+    {
+      nargs = '?',
+      desc = 'Open the project Mind tree',
+    }
+  )
+end
+
 M.setup = function(opts)
   M.opts = vim.tbl_deep_extend('force', require'mind.defaults', opts or {})
 
@@ -14,6 +35,9 @@ M.setup = function(opts)
   -- keymaps
   mind_keymap.init_keymaps(M.opts)
   mind_commands.precompute_commands()
+
+  -- user-commands
+  create_user_commands()
 end
 
 -- Open the main tree.
@@ -46,7 +70,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   local tree
   if (mind_state.local_tree == nil or use_global) then
     local cwd = vim.fn.getcwd()
-    tree = mind_state.projects[cwd]
+    tree = mind_state.state.projects[cwd]
 
     if (tree == nil) then
       tree = {
@@ -56,7 +80,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
         type = mind_node.TreeType.ROOT,
         icon = M.opts.ui.root_marker,
       }
-      mind_state.projects[cwd] = tree
+      mind_state.state.projects[cwd] = tree
     end
   else
     tree = mind_state.local_tree
