@@ -45,7 +45,7 @@ end
 -- will recurse into node.children (if any) and if node.is_expanded is true.
 local function get_dfs(parent, node, i)
   if (i == 0) then
-    return parent, node, nil
+    return parent, node, i
   end
 
   i = i - 1
@@ -56,7 +56,7 @@ local function get_dfs(parent, node, i)
       p, n, i = get_dfs(node, child, i)
 
       if (n ~= nil) then
-        return p, n, nil
+        return p, n, i
       end
     end
   end
@@ -74,8 +74,8 @@ M.get_node_by_line = function(tree, line)
 end
 
 -- Same as M.get_node_by_line, but also returns the parent node.
-M.get_node_and_parent_by_line = function(tree, i)
-  local parent, node, _ = get_dfs(nil, tree, i)
+M.get_node_and_parent_by_line = function(tree, line)
+  local parent, node, _ = get_dfs(nil, tree, line)
   return parent, node
 end
 

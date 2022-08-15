@@ -2,6 +2,8 @@
 
 local M = {}
 
+local notify = require'mind.notify'.notify
+
 -- Selector for keymap.
 --
 -- A keymap selector is a way to pick which keymap should be used. When a command allows for UI, it can set the
@@ -44,6 +46,39 @@ end
 -- Get the currently active keymap.
 M.get_keymap = function()
   return M.keymaps[M.keymaps.selector]
+end
+
+-- Insert keymaps into the given buffer.
+M.insert_keymaps = function(bufnr, tree, data_dir, opts)
+  local keyset = {}
+
+  for key, _ in pairs(M.keymaps.normal) do
+    keyset[key] = true
+  end
+
+  for key, _ in pairs(M.keymaps.selection) do
+    keyset[key] = true
+  end
+
+  for key, _ in pairs(keyset) do
+    vim.keymap.set('n', key, function()
+      local keymap = M.get_keymap()
+
+      if (keymap == nil) then
+        notify('no active keymap', vim.log.levels.WARN)
+        return
+      end
+
+      local cmd = keymap[key]
+
+      if (cmd == nil) then
+        notify('no command bound to ' .. tostring(key), vim.log.levels.WARN)
+        return
+      end
+
+      cmd(tree, data_dir, opts)
+    end, { buffer = bufnr, noremap = true, silent = true })
+  end
 end
 
 return M
