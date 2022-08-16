@@ -15,7 +15,7 @@ return {
     -- file extension to use when creating a data file
     data_extension = '.md',
 
-    -- default header to put in newly created data file
+    -- default header to put in newly created data files
     data_header = '# %s',
   },
 

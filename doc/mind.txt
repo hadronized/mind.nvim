@@ -494,6 +494,137 @@ Arguments:~
 ==============================================================================
 CONFIGURATION                                                      *mind-config*
 
+The configuration option of Mind can be passed to |mind.setup| to customize
+the way it works. Some Lua functions, especially the ones from the
+|mind-lua-api-main| API, also takes options that can override the ones defined
+in |mind.setup|.
+
+                                                       *mind-config-persistence
+The `persistence` section of the configuration contains options to specify
+where trees and data files are stored.
+
+`persistence.state_path`                      *mind-config-persistence.state_path*
+    Path where the global mind tree is stored.
+
+Default:~
+    `state_path = "~/.local/share/mind.nvim/mind.json"`
+
+`persistence.data_dir`                          *mind-config-persistence.data_dir*
+    Directory where to store global data files.
+
+Default:~
+    `data_dir = "~/.local/share/mind.nvim/data"`
+
+                                                              *mind-config-edit
+The `edit` section is a small and minimal configuration layer for editing data
+files. Mind is not about markup but we can still provide a couple of
+interesting features.
+
+`edit.data_extension`                            *mind-config-edit.data_extension*
+    File extension to use when creating a data file.
+
+Default:~
+    `data_extension = ".md"`
+
+`edit.data_header`                                  *mind-config-edit.data_header*
+    Default header to put in newly created data files.
+
+    The name of the node is inserted with `%s`.
+
+Default:~
+    `data_header = "# %s"`
+
+                                                                *mind-config-ui
+The `ui` section is all about user interactivity and rendering.
+
+`ui.width`                                                  *mind-config-ui.width*
+    Width of the tree view window.
+
+Default:~
+    `width = 30`
+
+`ui.root_marker`                                      *mind-config-ui.root_marker*
+    Marker used to identify the root of the tree (left to its name).
+
+Default:~
+    `root_marker = " "`
+
+`ui.local_marker`                                    *mind-config-ui.local_marker*
+    Marker used to identify a local root (right to its name).
+
+Default:~
+    `local_marker = "local"`
+
+`ui.data_marker`                                      *mind-config-ui.data_marker*
+    Marker used to show that a node has an associated data file.
+
+Default:~
+    `data_marker = ""`
+
+`ui.select_marker`                                  *mind-config-ui.select_marker*
+    Marker used to show that a node is currently selected.
+
+Default:~
+    `select_marker = ""`
+
+                                                      *mind-config-ui-highlight
+The `ui.highlight` sub-section is used to change the highlighting mechanism of
+Mind.
+
+`ui.highlight.closed_marker`              *mind-config-ui.highlight.closed_marker*
+    Highlight used on closed marks.
+
+Default:~
+    `closed_marker = "LineNr"`
+
+`ui.highlight.open_marker`                  *mind-config-ui.highlight.open_marker*
+    Highlight used on open marks.
+
+Default:~
+    `open_marker = "LineNr"`
+
+`ui.highlight.node_root`                      *mind-config-ui.highlight.node_root*
+    Highlight used on the name of the root node.
+
+Default:~
+    `node_root = "Function"`
+
+`ui.highlight.leaf_root`                      *mind-config-ui.highlight.node_leaf*
+    Highlight used on the name of regular nodes with no children.
+
+Default:~
+    `node_leaf = "String"`
+
+`ui.highlight.leaf_parent`                  *mind-config-ui.highlight.node_parent*
+    Highlight used on the name of regular nodes with children.
+
+Default:~
+    `node_parent = "Title"`
+
+`ui.highlight.local_marker`                *mind-config-ui.highlight.local_marker*
+    Highlight used on the local marker.
+
+Default:~
+    `local_marker = "Comment"`
+
+`ui.highlight.data_marker`                  *mind-config-ui.highlight.data_marker*
+    Highlight used on the data marker.
+
+Default:~
+    `data_marker = "Grey"`
+
+`ui.highlight.modifier_empty`            *mind-config-ui.highlight.modifier_empty*
+    Highlight used on empty nodes (i.e. no children and no data).
+
+Default:~
+    `modifier_empty = "CursorLineNr"`
+
+`ui.highlight.select_marker`              *mind-config-ui.highlight.select_marker*
+    Highlight used on the selection marker.
+
+Default:~
+    `select_marker = "Error"`
+
 ==============================================================================
 HIGHLIGHTS                                                     *mind-highlights*
 
