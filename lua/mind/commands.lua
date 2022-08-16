@@ -354,6 +354,12 @@ M.move_node = function(
       end
     end
 
+    if (target_i == nil or source_i == nil) then
+      -- trying to move inside itsefl; abort
+      M.unselect_node(tree, opts)
+      return
+    end
+
     if (target_i == source_i) then
       -- same node; aborting
       notify('not moving; source and target are the same node')

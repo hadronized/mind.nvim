@@ -24,6 +24,16 @@ local function create_user_commands()
       desc = 'Open the project Mind tree',
     }
   )
+
+  vim.api.nvim_create_user_command(
+    'MindReloadState',
+    function(opts)
+      require'mind'.reload_state()
+    end,
+    {
+      desc = 'Reload Mind internal state',
+    }
+  )
 end
 
 M.setup = function(opts)
@@ -59,7 +69,7 @@ M.open_project = function(use_global)
 end
 
 -- Load state.
-M.load_state = function()
+M.reload_state = function()
   mind_state.load_state(M.opts)
 end
 
