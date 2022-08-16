@@ -12,7 +12,6 @@ local notify = require'mind.notify'.notify
 M.KeymapSelector = {
   NORMAL = 'normal',
   SELECTION = 'selection',
-  BY_PATH = 'by_path',
 }
 
 -- Keymaps.

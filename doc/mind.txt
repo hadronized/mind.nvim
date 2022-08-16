@@ -1,0 +1,364 @@
+mind.txt*    For Neovim version 0.5                  Last change: 2022 Jul 05
+
+==============================================================================
+CONTENTS                                                         *mind-contents*
+
+  Introduction ············································· |mind-introduction|
+  Requirements ············································· |mind-requirements|
+  Usage ··························································· |mind-usage|
+    Commands ··················································· |mind-commands|
+    Lua API ····················································· |mind-lua-api|
+  Configuration ·················································· |mind-config|
+  Highlights ················································· |mind-highlights|
+  License ······················································· |mind-license|
+
+==============================================================================
+INTRODUCTION                                            *mind* *mind-introduction*
+
+Mind is an organizational plugin for Neovim for people wanting to take notes,
+organize journals and tasks, or basically manipulate various kinds of
+“metadata” in trees. Everything in Mind can be thought of as being part of a
+tree.
+
+Non-exhaustive feature set:
+
+- Markup agnostic. The plugin is only about organizing documents. You decide
+  which markup to use.
+- Tree views. Everything is put in a tree, that you can operate on by
+  expanding, collapsing or triggering. Most operations on trees are supported:
+  creating a new node in a tree, adding children, removing nodes, renaming
+  nodes, moving nodes before/after/inside another node (the latter operation
+  would turn the node into a sub-tree, if already one), etc.
+- Nodes and files don’t necessarily map. The tree is just the metadata. You
+  don’t have to create a file for an entry in the tree.
+- Three different kind of trees: global trees are stored in a single place on
+  your filesystem and can be open from anywhere. CWD-based trees are still
+  stored at the same place as global trees, but they can only be open if your
+  |cwd| is the same as the tree. Finally, local trees are very similar to
+  cwd-based trees, but they are stored inside |cwd| as well (in a `.mind`
+  directory), allowing for easy sharing.
+- Support simple link creation for creating links between documents easily.
+- Filtering, fuzzy search, etc. inside the tree directly. Fuzzy searching flat
+  lists is already powerful. Fuzzy searching a tree is even more powerful.
+
+==============================================================================
+REQUIREMENTS                                                 *mind-requirements*
+
+Mind works only with Neovim and was written with Neovim-0.8, so it is highly
+recommended to use Neovim version 0.8+.
+
+==============================================================================
+USAGE                                                               *mind-usage*
+
+Before doing anything else, you have to setup the plugin. If you are not using
+a package manager or environment doing that automatically for you, you need to
+call the |mind.setup| function to correctly initialize the plugin.
+
+For a minimal setup:
+
+For people using init.lua~
+
+In your `init.lua`, add:
+>
+            require'mind'.setup()
+<
+For people using init.vim~
+
+In your `init.vim`, add:
+>
+            lua << EOF
+            require'mind'.setup()
+            EOF
+<
+You can pass an optional argument to `setup(opts)` in order to pass {opts}.
+Have a look at |mind.setup| for further details.
+
+                                                                 *mind-commands*
+Commands~
+
+You can try those commands by typing them in your command line. By default,
+they will use the default options for the configuration of Mind. If you want to
+customize how those commands work, have a look at |mind.setup|.
+
+`:MindOpenMain`                                                    *:MindOpenMain*
+    Open the main Mind tree.
+
+    See |mind.open_main| for further information.
+
+`:MindOpenProject` {global}                                     *:MindOpenProject*
+    Open the project tree.
+
+    See |mind.open_project| for further information.
+
+`:MindReloadState`                                              *:MindReloadState*
+    Reload Mind state for global and local trees.
+
+    See |mind.reload_state| for further information.
+
+                                                                  *mind-lua-api*
+Lua API~
+
+The Lua API comprises several modules. Even though those modules might have
+more public functions than described here, you are only supposed to use the
+functions in this help page. Using one that is not listed here is considered
+unstable.
+
+`mind`          Entry point and main interface.
+`mind.commands` Available commands.
+`mind.keymap`   Keymap getter / setter and operations.
+`mind.node`     Node operations.
+`mind.ui`       Tree rendering and UI functions.
+
+                                                             *mind-lua-api-main*
+Main API~
+
+`mind.setup(`{opts}`)`                                                  *mind.setup*
+    Setup Mind with options.
+
+    This function will setup the Lua API and commands in a way that respects
+    the options you pass. It is mandatory to call that function at some time
+    if you want to be able to use Mind, should it be from the Lua API or
+    Neovim commands.
+
+Arguments:~
+    {opts} List of options. See the |mind-config| section.
+
+`mind.open_main()`                                                *mind.open_main*
+    Open the main tree.
+
+    The main Mind tree is a unique and globally available tree in your
+    filesystem. You can open it whenever you are, whatever the state of
+    Neovim.
+
+    The location of the tree is based on |mind-config-persistence.state_path|
+    for its state and |mind-config-persistence.data_dir| for any data
+    associated with its nodes.
+
+`mind.open_project(`{use_global}`)`                              *mind.open_project*
+    Open the project Mind tree.
+
+    The project tree is a |current-directory|-based Mind tree. |getcwd| gives
+    the current working directory, and then two modes exist:
+
+    - Global project mode: if {global} is passed, the tree is fetched from the
+      global state and globad data directory,
+      |mind-config-persistence.state_path| and |mind-config-persistence.data_dir|.
+      If the tree is not present in the state yet, it is automatically
+      created, empty.
+    - Local tree mode: if `global` is not passed, a local tree is created or
+      open instead. A local tree stores both its state and data in `.mind/`,
+      relative to the |current-directory| set.
+
+    When working with a local tree, its data paths will always be relative to
+    the |current-directory|, so that sharing such trees is easy (for instance,
+    checking them in versionning systems like Git).
+
+Arguments:~
+    {global} Optional. `true` for a global project true, `false` or `nil`
+             otherwise.
+
+`mind.reload_state()`                                          *mind.reload_state*
+    Reload Mind state.
+
+    You might never use this command but if you use different Neovim instances
+    and edit trees in both, you might want to use that command to synchronize
+    the changes in the other Neovim instances.
+
+`mind.wrap_main_tree_fn(`{f}`,` {opts}`)`                     *mind.wrap_main_tree_fn*
+    Wrap a command function with the main Mind tree.
+
+    See |mind-lua-api-commands-functions| for how to write such functions.
+
+Arguments:~
+    {f}    the command function to execute.
+    {opts} user-defined options.
+
+`mind.wrap_project_tree_fn(`{f}`,` {global}`,` {opts}`)`                *mind.wrap_main_tree_fn*
+    Wrap a command function with the main Mind tree.
+
+    See |mind-lua-api-commands-functions| for how to write such functions.
+
+Arguments:~
+    {f}    the command function to execute.
+    {global} Optional. `true` for a global project true, `false` or `nil`
+             otherwise.
+    {opts} user-defined options.
+
+                                                         *mind-lua-api-commands*
+Commands API~
+
+The command API is split into two categories: the declarative interface and
+the function interface.
+                                             *mind-lua-api-commands-declarative*
+The declarative interface allows users to refer to Mind commands by the use of
+strings, mainly in keymaps. A single table contains them:
+`mind.commands.commands`, in the form of a string to function map. Only the
+keys are documented here.
+
+`'toggle_node'`                                         *mind-command-toggle_node*
+    Toggle the node under the cursor.
+
+`'quit'`                                                       *mind-command-quit*
+    Quit the tree if open.
+
+`'add_above'`                                             *mind-command-add_above*
+    Add a new node above the node under the cursor.
+
+`'add_below'`                                             *mind-command-add_below*
+    Add a new node below the node under the cursor.
+
+`'add_inside_start'`                               *mind-command-add_inside_start*
+    Add a new node inside the node under the cursor, at the beginning of its
+    children.
+
+`'add_inside_end'`                                   *mind-command-add_inside_end*
+    Add a new node inside the node under the cursor, at the end of its
+    children.
+
+`'delete'`                                                   *mind-command-delete*
+    Delete the node under the cursor.
+
+`'rename'`                                                   *mind-command-rename*
+    Rename the node under the cursor.
+
+`'open_data'`                                             *mind-command-open_data*
+    Open the data file of the node under the cursor.
+
+    If the node doesn’t have data associated with, automatically create the
+    data file and open it.
+
+`'change_icon'`                                         *mind-command-change_icon*
+    Change the icon of the node under the cursor.
+
+`'select'`                                                   *mind-command-select*
+    Select the node under the cursor.
+
+    A selected node can be operated on by functions such as move.
+
+`'select_path'`                                         *mind-command-select_path*
+    Select a node by inputting its path.
+
+    A path has the form `/Node1/Node2/…`, where `/` refers to the root and
+    each segment is the name of a node.
+
+`'move_above'`                                           *mind-command-move_above*
+    Move the selected node above the node under the cursor.
+
+`'move_below'`                                           *mind-command-move_below*
+    Move the selected node below the node under the cursor.
+
+`'move_inside_start'`                             *mind-command-move_inside_start*
+    Move the selected node inside the node under the cursor, at the beginning
+    of its children.
+
+`'move_inside_end'`                                 *mind-command-move_inside_end*
+    Move the selected node inside the node under the cursor, at the end of its
+    children.
+
+                                               *mind-lua-api-commands-functions*
+All functions in the Commands API take a single parameter called {args}. That
+table contains a couple of useful information that command functions will use.
+If you plan on writing your own command, you will have to understand the
+members of that {args} table:
+
+Members:~
+    {tree}     the tree the function must operate on.
+    {data_dir} the data directory the tree is affected to.
+    {opts}     the globar or overriden user options.
+
+An important point about command functions is that you don’t have to rely on
+the provided comands (via |mind-lua-api-commands-declarative|). You can also
+create your own commands. In order to do so, you need to create a function
+taking a table as described above — {args} — and set a keybinding for it. You
+can also directly invoke your command with a tree by using
+
+                                                           *mind-lua-api-keymap*
+Keymap API~
+
+Keymaps are a way to define keybindings via namespaces, so overriding a key is
+possible, depending on the context. The idea is that Mind will set keymaps
+depending on its state, and users provide the keybindings inside each
+namespaced keymaps. For instance, a user might want to use the `o` key to
+insert a new node under the cursor node in the normal keymap, but `o` should
+instead move the selected node under the cursor node in the selection keymap.
+
+Have a look at |mind-config-keymaps| for a further understanding of how it
+works.
+
+`mind.keymap.KeymapSelector`                          *mind.keymap.KeymapSelector*
+    Keymaps are namespaced. Selectors allow to switch namespaces.
+
+    You have access to the following selectors:
+
+Selectors:~
+    `KeymapSelector.NORMAL`    selects the normal keymap.
+    `KeymapSelector.SELECTION` selects the selection keymap, which is enabled
+                             when a node is selected.
+
+`mind.keymap.get_keymap()`                                *mind.keymap.get_keymap*
+    Get the currently active keymap.
+
+`mind.keymap.set_keymap(`{selector}`)`                      *mind.keymap.set_keymap*
+    Set the currently active keymap.
+
+Arguments:~
+    {selector} the |mind.keymap.KeymapSelector| to set the currently keymap
+    to.
+
+                                                             *mind-lua-api-node*
+Node API~
+    The Node API contains everything that is required to operate tree nodes at
+    the low level. That means creating, deleting, renaming, selecting, moving,
+    etc.
+
+    However, most of the useful UI interaction is made by using a combination
+    of the Node API and the UI API (see |mind-lua-api-ui|). Specific workflows
+    can be obtained by using both APIs. For instance, selecting nodes via the
+    line cursor and selection keymap are the only way users can interact with
+    Mind in the UI, but if you code your own workflow, you have access to much
+    more functions.
+
+==============================================================================
+CONFIGURATION                                                      *mind-config*
+
+==============================================================================
+HIGHLIGHTS                                                     *mind-highlights*
+
+TODO
+
+==============================================================================
+LICENSE                                                           *mind-license*
+
+Copyright (c) 2022, Dimitri Sabadie <dimitri.sabadie@gmail.com>
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of Dimitri Sabadie <dimitri.sabadie@gmail.com> nor the
+      names of other contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+==============================================================================
+vim:tw=78:sw=4:ts=8:ft=help:norl:

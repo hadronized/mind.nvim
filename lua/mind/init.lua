@@ -73,6 +73,11 @@ M.reload_state = function()
   mind_state.load_state(M.opts)
 end
 
+-- Wrap a function call expecting the main tree.
+M.wrap_main_tree_fn = function(f, opts)
+  f(mind_state.state.tree, opts)
+end
+
 -- Wrap a function call expecting a project tree.
 --
 -- If the project tree doesn’t exist, it is automatically created.
@@ -88,7 +93,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
           { text = cwd:match('^.+/(.+)$') },
         },
         type = mind_node.TreeType.ROOT,
-        icon = M.opts.ui.root_marker,
+        icon = opts.ui.root_marker,
       }
       mind_state.state.projects[cwd] = tree
     end
