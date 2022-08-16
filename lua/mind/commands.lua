@@ -206,8 +206,11 @@ M.delete_node_line = function(tree, line, opts)
   end
 
   local index = mind_node.find_parent_index(parent, node)
-  mind_node.delete_node(parent, index)
-  mind_ui.render(tree, 0, opts)
+
+  mind_ui.with_confirmation(string.format("Delete '%s'?", node.contents[1].text), function()
+    mind_node.delete_node(parent, index)
+    mind_ui.render(tree, 0, opts)
+  end)
 end
 
 -- Delete the node under the cursor.

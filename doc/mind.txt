@@ -491,6 +491,18 @@ Arguments:~
     {default} the default input response.
     {f}       the function to run with the provided input.
 
+`mind.ui.with_confirmation(`                           *mind.ui.with_confirmation*
+  {prompt}`,`
+  {f}
+`)`
+    Ask the sure to confirm with a given {prompt} and the operation by typing
+    `y` or `n`. If the user has typed `y`, {f} is run, otherwise the whole
+    operation is aborted.
+
+Arguments:~
+    {prompt}  the input prompt.
+    {f}       the function to run with confirmed.
+
 ==============================================================================
 CONFIGURATION                                                      *mind-config*
 
