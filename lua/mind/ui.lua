@@ -176,4 +176,13 @@ M.with_input = function(prompt, default, f)
   end)
 end
 
+-- Run a command by asking for confirmation before. If the answer is 'y', run the command, otherwise abort.
+M.with_confirmation = function(prompt, f)
+  vim.ui.input({ prompt = prompt .. ' (y/N) ' }, function(input)
+    if (input ~= nil and input == 'y') then
+      f()
+    end
+  end)
+end
+
 return M
