@@ -472,7 +472,8 @@ end
 -- Open and display a tree in a new window.
 M.open_tree = function(tree, data_dir, opts)
   -- window
-  vim.api.nvim_cmd({ cmd = 'vsplit'}, {})
+  vim.api.nvim_cmd({ cmd = 'vsp'}, {})
+  vim.api.nvim_cmd({ cmd = 'wincmd', args = { 'H' } }, {})
   vim.api.nvim_win_set_width(0, opts.ui.width)
 
   -- buffer
