@@ -164,25 +164,32 @@ Arguments:~
     and edit trees in both, you might want to use that command to synchronize
     the changes in the other Neovim instances.
 
-`mind.wrap_main_tree_fn(`{f}`,` {opts}`)`                     *mind.wrap_main_tree_fn*
+`mind.wrap_main_tree_fn(`{f}`,` {render}`,` {opts}`)`           *mind.wrap_main_tree_fn*
     Wrap a command function with the main Mind tree.
 
     See |mind-lua-api-commands-functions| for how to write such functions.
 
 Arguments:~
-    {f}    the command function to execute.
-    {opts} user-defined options.
+    {f}      the command function to execute.
+    {render} whether to render the tree again after the function has finished.
+    {opts}   user-defined options.
 
-`mind.wrap_project_tree_fn(`{f}`,` {global}`,` {opts}`)`                *mind.wrap_main_tree_fn*
+`mind.wrap_project_tree_fn(`                              *mind.wrap_main_tree_fn*
+  {f}`,`
+  {global}`,`
+  {render}`,`
+  {opts}
+`)
     Wrap a command function with the main Mind tree.
 
     See |mind-lua-api-commands-functions| for how to write such functions.
 
 Arguments:~
-    {f}    the command function to execute.
-    {global} Optional. `true` for a global project true, `false` or `nil`
+    {f}      the command function to execute.
+    {global} optional; `true` for a global project true, `false` or `nil`
              otherwise.
-    {opts} user-defined options.
+    {render} whether to render the tree again after the function has finished.
+    {opts}   user-defined options.
 
                                                          *mind-lua-api-commands*
 Commands API~
@@ -290,7 +297,7 @@ works.
 
     You have access to the following selectors:
 
-Selectors:~
+Variants:~
     `KeymapSelector.NORMAL`    selects the normal keymap.
     `KeymapSelector.SELECTION` selects the selection keymap, which is enabled
                              when a node is selected.
@@ -317,6 +324,172 @@ Node API~
     line cursor and selection keymap are the only way users can interact with
     Mind in the UI, but if you code your own workflow, you have access to much
     more functions.
+
+`mind.node.MoveDir`                                            *mind.node.MoveDir*
+    Move direction.
+
+    Whenever a node is to be added to a tree, whether it’s a new node or an
+    already existing one, a value of this enumeration must be used to locate
+    exactly where to put the node. This is only useful because of the line
+    cursor based UI. Developers writing command functions shouldn’t need that
+    as the Node API has lower-level and more precise functions to select
+    nodes and how to insert nodes into others.
+
+Variants:~
+    `MoveDir.ABOVE`        place the node above the current one.
+    `MoveDir.BELOW`        place the node below the current one.
+    `MoveDir.INSIDE_START` place the node as child of the current one, at its
+                         beginning.
+    `MoveDir.INSIDE_END`   place the node as child of the current one, at its
+                         end.
+
+`mind.node.new_node(`{name}`,` {children}`)`                      *mind.node.new_node*
+    Create a new, detached node.
+
+Arguments:~
+    {name}     the name of the node.
+    {children} the list of node children. Pass `nil` or omit the argument if
+               you don’t want children for that node.
+
+`mind.node.get_node_by_line(`{tree}`,` {line}`)`          *mind.node.get_node_by_line*
+    Get a node at the given line in the {tree}, if it exists.
+
+    That function tries to find the node in {tree} that is located at {line}.
+    That is a direct mapping between the state of the tree (expanded /
+    collapsed nodes) and the displayed tree. Use this function if you want to
+    get the node based on buffer lines.
+
+Arguments:~
+    {tree} the tree to lookup the node in.
+    {line} the line at which the node to get is located.
+
+Return:~
+    {node} the node if found, `nil` otherwise.
+
+`mind.node.get_node_and_parent_by_line(`   *mind.node.get_node_and_parent_by_line*
+  {tree}`,`
+  {line}
+`)`
+    Same as |mind.node.get_node_by_line|, but also return the parent.
+
+Arguments:~
+    {tree} the tree to lookup the node in.
+    {line} the line at which the node to get is located.
+
+Return:~
+    {parent}, {node} the parent and the node if found, `nil` otherwise
+
+`mind.node.get_node_by_path(`{tree}`,` {path}`)`          *mind.node.get_node_by_path*
+    Get a node by path, along with its parent.
+
+    A path has the form `/Node1/Node2/…`, where `/` refers to the root and
+    each segment is the name of a node.
+
+Arguments:~
+    {tree} the tree to lookup the node in.
+    {path} the path to lookup with.
+
+Return:~
+    {parent}, {node} the parent and the node if found, `nil` otherwise.
+
+`mind.node.insert_node(`                                   *mind.node.insert_node*
+  {tree}`,`
+  {i}`,`
+  {node}
+`)`
+    Insert a {node} at index {i} in {tree}.
+
+    You can use a negative {i} to starts from the end back up.
+
+Arguments:~
+    {tree} the tree to insert the node in.
+    {i}    the index where to add the node.
+    {node} the node to insert.
+
+`mind.node.delete_node(`                                   *mind.node.delete_node*
+  {tree}`,`
+  {i}`,`
+`)`
+    Delete the node at index {i} in the given {tree}.
+
+    You can use a negative {i} to starts from the end back up.
+
+Arguments:~
+    {tree} the tree to delete the node from.
+    {i}    the index where to delete the node.
+
+`mind.node.find_parent_index(`                       *mind.node.find_parent_index*
+  {tree}`,`
+  {node}`,`
+`)`
+    Find the parent index of a {node} in its parent’s children in a given
+    {tree}.
+
+Arguments:~
+    {tree} the tree to look in.
+    {node} the node to get the index of.
+
+Return:~
+    {i} the index of {node} in its parent’s children, in {tree}.
+
+`mind.node.move_source_target_same_tree(` *mind.node.move_source_target_same_tree*
+  {tree}`,`
+  {src}`,`
+  {tgt}`,`
+`)`
+    Move a source node (referred to by its {src} index) at target node
+    (referred to by its {tgt} index) in the same parent tree.
+
+Arguments:~
+    {tree} the parent node to move nodes in.
+    {src}  the index of the node to move from.
+    {tgt}  the index of the node to move to
+
+                                                               *mind-lua-api-ui*
+UI API~
+    The UI API is used to create window, buffers, display trees and nodes and
+    add user interaction atop of all of the rest of the Mind APIs.
+
+`mind.ui.render(`{tree}`,` {bufnr}`,` {opts}`)`                         *mind.ui.render*
+    Render the tree in the {bufnr} buffer with the given {opts}.
+
+    This is a low-level function that you are unlikely to use, especially if
+    you are writing a command function. If you are looking for a way to render
+    your tree after you have performed some operations, you should have a look
+    at |mind.wrap_main_tree_fn| and |mind.wrap_project_tree_fn| options.
+
+Arguments:~
+    {tree}  the tree to render
+    {bufnr} the buffer to render into
+    {opts}  user-defined options.
+
+`mind.ui.with_cursor(`{f}`)`                                  *mind.ui.with_cursor*
+    Run a command by passing it the cursor line.
+
+    The function must have the following form:
+>
+    function f(line)
+      -- …
+    end
+<
+    Where {line} is the line number of the cursor.
+
+Arguments:~
+    {f} the function to run with the line number.
+
+`mind.ui.with_input(`                                         *mind.ui.with_input*
+  {prompt}`,`
+  {default}`,`
+  {f}
+`)`
+    Ask the user for input with a given {prompt} and run the {f} function on
+    its result if provided. The optional {default} can be provided to set a
+    default input response.
+
+Arguments:~
+    {prompt}  the input prompt.
+    {default} the default input response.
+    {f}       the function to run with the provided input.
 
 ==============================================================================
 CONFIGURATION                                                      *mind-config*
