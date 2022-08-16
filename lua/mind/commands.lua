@@ -65,8 +65,8 @@ M.commands = {
     M.toggle_select_node_cursor(tree, opts)
   end,
 
-  select_path = function(tree)
-    M.select_node_path(tree)
+  select_path = function(tree, _, opts)
+    M.select_node_path(tree, opts)
   end,
 
   move_above = function(tree, _, opts)
@@ -265,6 +265,9 @@ end
 
 -- Select a node.
 M.select_node = function(tree, parent, node, opts)
+  -- ensure we unselect anything that would be currently selected
+  M.unselect_node(tree, opts)
+
   node.is_selected = true
   M.selected = { parent = parent, node = node }
 
@@ -279,10 +282,13 @@ M.select_node_line = function(tree, line, opts)
 end
 
 -- Select a node by path.
-M.select_node_path = function(tree)
-  mind_ui.with_input('Path: ', '/', function(input)
-    local parent, node = mind_node.get_node_by_path(tree, input)
-    M.select_node(tree, parent, node)
+M.select_node_path = function(tree, opts)
+  mind_ui.with_input('Path: /', nil, function(input)
+    local parent, node = mind_node.get_node_by_path(tree, '/' .. input)
+
+    if node ~= nil then
+      M.select_node(tree, parent, node, opts)
+    end
   end)
 end
 

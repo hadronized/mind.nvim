@@ -87,6 +87,9 @@ return {
 
     -- keybindings when a node is selected
     selection = {
+      ['<cr>'] = 'open_data',
+      ['<tab>'] = 'toggle_node',
+      ['/'] = 'select_path',
       I = 'move_inside_start',
       i = 'move_inside_end',
       O = 'move_above',
