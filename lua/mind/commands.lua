@@ -58,6 +58,7 @@ M.commands = {
 
   make_url = function(args)
     M.make_url_node_cursor(args.tree, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
   change_icon = function(args)

@@ -45,7 +45,7 @@ local function node_to_line(node, opts)
   if (node.type == nil) then
     if (node.children ~= nil) then
       partial_hls[#partial_hls - #node.contents + 1].group = opts.ui.highlight.node_parent
-    elseif (node.data == nil) then
+    elseif (node.data == nil and node.url == nil) then
       partial_hls[#partial_hls - #node.contents + 1].group = opts.ui.highlight.modifier_empty
     end
   end
