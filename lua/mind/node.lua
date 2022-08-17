@@ -85,29 +85,43 @@ end
 -- is the root and paths[2] is the name of the first child under the root.
 --
 -- The function stops when it arrives at the end of paths, that is, when i == #paths + 1.
-local function get_node_by_path_rec(parent, tree, paths, i)
+local function get_node_by_path_rec(parent, tree, paths, i, create)
   if (i == #paths + 1) then
     return parent, tree
   end
 
-  -- no children, so this can’t be a solution
+  local segment = paths[i]
+
   if (tree.children == nil) then
-    return
+    if create then
+      tree.children = { M.new_node(segment) }
+    else
+      -- no children, so this can’t be a solution
+      return
+    end
   end
 
   -- look for the child which name is the same as paths[i]
-  local segment = paths[i]
   for _, child in ipairs(tree.children) do
     if (child.contents[1].text == segment) then
-      return get_node_by_path_rec(tree, child, paths, i + 1)
+      return get_node_by_path_rec(tree, child, paths, i + 1, create)
     end
+  end
+
+  if create then
+    -- we haven’t found anything, so create the node nevertheless
+    local node = M.new_node(segment)
+    tree.children[#tree.children + 1] = node
+    return get_node_by_path_rec(tree, node, paths, i + 1, create)
   end
 end
 
 -- Get a node by path.
 --
 -- A path starts with / and each part of the path is the name of the node.
-M.get_node_by_path = function(tree, path)
+--
+-- If `create` is set to `true`, nodes are created automatically if they don’t exist.
+M.get_node_by_path = function(tree, path, create)
   if (path == '/') then
     return nil, tree
   end
@@ -119,7 +133,7 @@ M.get_node_by_path = function(tree, path)
     return
   end
 
-  return get_node_by_path_rec(nil, tree, split_path, 2)
+  return get_node_by_path_rec(nil, tree, split_path, 2, create)
 end
 
 -- Insert a node at index i in the given tree’s children.

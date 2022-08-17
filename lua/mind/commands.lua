@@ -287,7 +287,11 @@ end
 -- Select a node by path.
 M.select_node_path = function(tree, opts)
   mind_ui.with_input('Path: /', nil, function(input)
-    local parent, node = mind_node.get_node_by_path(tree, '/' .. input)
+    local parent, node = mind_node.get_node_by_path(
+      tree,
+      '/' .. input,
+      opts.tree.automatic_creation
+    )
 
     if node ~= nil then
       M.select_node(tree, parent, node, opts)
