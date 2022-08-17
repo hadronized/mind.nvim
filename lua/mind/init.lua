@@ -61,7 +61,7 @@ end
 M.open_project = function(use_global)
   M.wrap_project_tree_fn(
     function(tree, opts)
-      mind_commands.open_tree(tree, mind_state.get_project_data_dir(), opts)
+      mind_commands.open_tree(tree, mind_state.get_project_data_dir(M.opts), opts)
     end,
     use_global,
     M.opts
