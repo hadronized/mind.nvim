@@ -10,83 +10,83 @@ local mind_ui = require'mind.ui'
 local notify = require'mind.notify'.notify
 
 M.commands = {
-  toggle_node = function(tree, _, opts)
-    M.toggle_node_cursor(tree, opts)
-    mind_state.save_state(opts)
+  toggle_node = function(args)
+    M.toggle_node_cursor(args.tree, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  quit = function(tree, _, opts)
+  quit = function(args)
     M.reset()
-    M.close(tree, opts)
+    M.close(args.tree, args.opts)
   end,
 
-  add_above = function(tree, _, opts)
-    M.create_node_cursor(tree, mind_node.MoveDir.ABOVE, opts)
-    mind_state.save_state(opts)
+  add_above = function(args)
+    M.create_node_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  add_below = function(tree, _, opts)
-    M.create_node_cursor(tree, mind_node.MoveDir.BELOW, opts)
-    mind_state.save_state(opts)
+  add_below = function(args)
+    M.create_node_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  add_inside_start = function(tree, _, opts)
-    M.create_node_cursor(tree, mind_node.MoveDir.INSIDE_START, opts)
-    mind_state.save_state(opts)
+  add_inside_start = function(args)
+    M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  add_inside_end = function(tree, _, opts)
-    M.create_node_cursor(tree, mind_node.MoveDir.INSIDE_END, opts)
-    mind_state.save_state(opts)
+  add_inside_end = function(args)
+    M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  delete = function(tree, _, opts)
-    M.delete_node_cursor(tree, opts)
-    mind_state.save_state(opts)
+  delete = function(args)
+    M.delete_node_cursor(args.tree, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  rename = function(tree, _, opts)
-    M.rename_node_cursor(tree, opts)
+  rename = function(args)
+    M.rename_node_cursor(args.tree, args.opts)
     M.reset()
     mind_state.save_state(opts)
   end,
 
-  open_data = function(tree, data_dir, opts)
-    M.open_data_cursor(tree, data_dir, opts)
+  open_data = function(args)
+    M.open_data_cursor(args.tree, args.data_dir, args.opts)
+    mind_state.save_state(args.opts)
+  end,
+
+  change_icon = function(args)
+    M.change_icon_cursor(args.tree, args.opts)
+    mind_state.save_state(args.opts)
+  end,
+
+  select = function(args)
+    M.toggle_select_node_cursor(args.tree, args.opts)
+  end,
+
+  select_path = function(args)
+    M.select_node_path(args.tree, args.opts)
+  end,
+
+  move_above = function(args)
+    M.move_node_selected_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
+    mind_state.save_state(args.opts)
+  end,
+
+  move_below = function(args)
+    M.move_node_selected_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
     mind_state.save_state(opts)
   end,
 
-  change_icon = function(tree, _, opts)
-    M.change_icon_cursor(tree, opts)
-    mind_state.save_state(opts)
+  move_inside_start = function(args)
+    M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
+    mind_state.save_state(args.opts)
   end,
 
-  select = function(tree, _, opts)
-    M.toggle_select_node_cursor(tree, opts)
-  end,
-
-  select_path = function(tree, _, opts)
-    M.select_node_path(tree, opts)
-  end,
-
-  move_above = function(tree, _, opts)
-    M.move_node_selected_cursor(tree, mind_node.MoveDir.ABOVE, opts)
-    mind_state.save_state(opts)
-  end,
-
-  move_below = function(tree, _, opts)
-    M.move_node_selected_cursor(tree, mind_node.MoveDir.BELOW, opts)
-    mind_state.save_state(opts)
-  end,
-
-  move_inside_start = function(tree, _, opts)
-    M.move_node_selected_cursor(tree, mind_node.MoveDir.INSIDE_START, opts)
-    mind_state.save_state(opts)
-  end,
-
-  move_inside_end = function(tree, _, opts)
-    M.move_node_selected_cursor(tree, mind_node.MoveDir.INSIDE_END, opts)
-    mind_state.save_state(opts)
+  move_inside_end = function(args)
+    M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
+    mind_state.save_state(args.opts)
   end,
 }
 

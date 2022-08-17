@@ -59,6 +59,9 @@ M.insert_keymaps = function(bufnr, tree, data_dir, opts)
     keyset[key] = true
   end
 
+  -- the input for the command function
+  local args = { tree = tree, data_dir = data_dir, opts = opts }
+
   for key, _ in pairs(keyset) do
     vim.keymap.set('n', key, function()
       local keymap = M.get_keymap()
@@ -75,7 +78,7 @@ M.insert_keymaps = function(bufnr, tree, data_dir, opts)
         return
       end
 
-      cmd(tree, data_dir, opts)
+      cmd(args)
     end, { buffer = bufnr, noremap = true, silent = true })
   end
 end
