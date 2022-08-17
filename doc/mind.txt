@@ -229,10 +229,20 @@ keys are documented here.
     Rename the node under the cursor.
 
 `'open_data'`                                             *mind-command-open_data*
-    Open the data file of the node under the cursor.
+    Open the data file of the node under the cursor, or URL if any.
 
-    If the node doesn’t have data associated with, automatically create the
-    data file and open it.
+    This command will check whether the node is an URL one. If it is, it will
+    open the URL (via the `open` system command). Otherwise, it will open the
+    data file associated with the node.
+
+    If the node doesn’t have data associated with, the function automatically
+    creates the data file and opens it.
+
+`'make_url'`                                               *mind-command-make_url*
+    Turn the node under the cursor into a URL node.
+
+    If the node has data already associated with it, this function will abort
+    with an error message. Otherwise, the user is prompted for the URL to set.
 
 `'change_icon'`                                         *mind-command-change_icon*
     Change the icon of the node under the cursor.
@@ -598,6 +608,13 @@ Default:~
 Default:~
     `data_marker = ""`
 
+`ui.url_marker`                                        *mind-config-ui.url_marker*
+    Marker used to show that a node has a URL.
+
+Default:~
+    `url_marker = " "`
+
+
 `ui.select_marker`                                  *mind-config-ui.select_marker*
     Marker used to show that a node is currently selected.
 
@@ -649,6 +666,12 @@ Default:~
 
 Default:~
     `data_marker = "Grey"`
+
+`ui.highlight.url_marker`                    *mind-config-ui.highlight.url_marker*
+    Highlight used on the url marker.
+
+Default:~
+    `url_marker = "Label"`
 
 `ui.highlight.modifier_empty`            *mind-config-ui.highlight.modifier_empty*
     Highlight used on empty nodes (i.e. no children and no data).

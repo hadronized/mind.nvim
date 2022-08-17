@@ -61,13 +61,21 @@ local function node_to_line(node, opts)
     }
   end
 
-  -- special marker for data
-  if (node.data ~= nil) then
+  -- special marker for data / URL nodes
+  if node.data ~= nil then
     local marker = ' ' .. opts.ui.data_marker
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
       group = opts.ui.highlight.data_marker,
+      width = #marker,
+    }
+  elseif node.url ~= nil then
+    local marker = ' ' .. opts.ui.url_marker
+    name = name .. marker
+
+    partial_hls[#partial_hls + 1] = {
+      group = opts.ui.highlight.url_marker,
       width = #marker,
     }
   end
