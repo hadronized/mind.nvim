@@ -39,6 +39,9 @@ return {
     -- marker used to show that a node has an associated data file
     data_marker = '',
 
+    -- marker used to show that a node has an URL
+    url_marker = ' ',
+
     -- marker used to show that a node is currently selected
     select_marker = '',
 
@@ -65,6 +68,9 @@ return {
       -- highlight used on the data marker
       data_marker = 'Grey',
 
+      -- highlight used on the url marker
+      url_marker = 'Label',
+
       -- highlight used on empty nodes (i.e. no children and no data)
       modifier_empty = 'CursorLineNr',
 
@@ -88,6 +94,7 @@ return {
       q = 'quit',
       r = 'rename',
       R = 'change_icon',
+      u = 'make_url',
       x = 'select',
     },
 

@@ -56,6 +56,10 @@ M.commands = {
     mind_state.save_state(args.opts)
   end,
 
+  make_url = function(args)
+    M.make_url_node_cursor(args.tree, args.opts)
+  end,
+
   change_icon = function(args)
     M.change_icon_cursor(args.tree, args.opts)
     mind_state.save_state(args.opts)
@@ -94,6 +98,11 @@ M.commands = {
 --
 -- If it doesn’t exist, create it first.
 M.open_data = function(tree, node, directory, opts)
+  if node.url then
+    vim.fn.system(string.format('open %s', node.url))
+    return
+  end
+
   local data = node.data
   if (data == nil) then
     local contents = string.format(opts.edit.data_header, node.contents[1].text)
@@ -142,6 +151,34 @@ end
 M.open_data_cursor = function(tree, directory, opts)
   mind_ui.with_cursor(function(line)
     M.open_data_line(tree, line, directory, opts)
+  end)
+end
+
+-- Turn a node into a URL node.
+--
+-- For this to work, the node must not have any data associated with it.
+M.make_url_node = function(tree, node, opts)
+  if node.data ~= nil then
+    notify('cannot create URL node: data present', vim.log.levels.ERROR)
+    return
+  end
+
+  mind_ui.with_input('URL: ', 'https://', function(input)
+    node.url = input
+    mind_ui.render(tree, 0, opts)
+  end)
+end
+
+-- Turn the node on the given line a URL node.
+M.make_url_node_line = function(tree, line, opts)
+  local node = mind_node.get_node_by_line(tree, line)
+  M.make_url_node(tree, node, opts)
+end
+
+-- Turn the node under the cursor a URL node.
+M.make_url_node_cursor = function(tree, opts)
+  mind_ui.with_cursor(function(line)
+    M.make_url_node_line(tree, line, opts)
   end)
 end
 
