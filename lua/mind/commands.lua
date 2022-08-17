@@ -48,7 +48,7 @@ M.commands = {
   rename = function(args)
     M.rename_node_cursor(args.tree, args.opts)
     M.reset()
-    mind_state.save_state(opts)
+    mind_state.save_state(args.opts)
   end,
 
   open_data = function(args)
