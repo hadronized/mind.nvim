@@ -379,11 +379,11 @@ Arguments:~
 Return:~
     {parent}, {node} the parent and the node if found, `nil` otherwise
 
-`mind.node.get_node_by_path(`
+`mind.node.get_node_by_path(`                         *mind.node.get_node_by_path*
   {tree}`,`
   {path},
   {create},
-`)`          *mind.node.get_node_by_path*
+`)`
     Get a node by {path} in {tree}, along with its parent.
 
     A path has the form `/Node1/Node2/…`, where `/` refers to the root and

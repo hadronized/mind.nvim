@@ -75,6 +75,7 @@ end
 
 -- Wrap a function call expecting the main tree.
 M.wrap_main_tree_fn = function(f, opts)
+  opts = vim.tbl_deep_extend('force', M.opts, opts or {})
   f(mind_state.state.tree, opts)
 end
 
@@ -82,6 +83,8 @@ end
 --
 -- If the project tree doesn’t exist, it is automatically created.
 M.wrap_project_tree_fn = function(f, use_global, opts)
+  opts = vim.tbl_deep_extend('force', M.opts, opts or {})
+
   local tree
   if (mind_state.local_tree == nil or use_global) then
     local cwd = vim.fn.getcwd()
