@@ -116,13 +116,12 @@ M.open_data = function(tree, node, directory, opts)
 
   local winnr = require('window-picker').pick_window()
 
-  if (winnr == nil) then
-    notify('cannot pick window; please install s1n7ax/nvim-window-picker')
-    return
+  if (winnr ~= nil) then
+    vim.api.nvim_set_current_win(winnr)
   end
 
-  vim.api.nvim_set_current_win(winnr)
   vim.api.nvim_cmd({ cmd = 'e', args = { data } }, {})
+
 end
 
 -- Open the data file associated with a node for the given line.

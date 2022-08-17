@@ -76,7 +76,8 @@ end
 -- Wrap a function call expecting the main tree.
 M.wrap_main_tree_fn = function(f, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
-  f(mind_state.state.tree, opts)
+  local args = { tree = mind_state.state.tree, data_dir = opts.persistence.data_dir, opts = opts }
+  f(args)
 end
 
 -- Wrap a function call expecting a project tree.
