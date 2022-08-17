@@ -24,6 +24,7 @@ mind-config-edit.data_extension	mind.txt	/*mind-config-edit.data_extension*
 mind-config-edit.data_header	mind.txt	/*mind-config-edit.data_header*
 mind-config-persistence.data_dir	mind.txt	/*mind-config-persistence.data_dir*
 mind-config-persistence.state_path	mind.txt	/*mind-config-persistence.state_path*
+mind-config-tree.automatic_creation	mind.txt	/*mind-config-tree.automatic_creation*
 mind-config-ui.data_marker	mind.txt	/*mind-config-ui.data_marker*
 mind-config-ui.highlight.closed_marker	mind.txt	/*mind-config-ui.highlight.closed_marker*
 mind-config-ui.highlight.data_marker	mind.txt	/*mind-config-ui.highlight.data_marker*

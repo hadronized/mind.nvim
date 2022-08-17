@@ -512,21 +512,26 @@ end
 
 -- Precompute commands.
 --
--- This function will scan the keymaps and will replace the command name with the real command function.
+-- This function will scan the keymaps and will replace the command name with the real command function, if the command
+-- name is a string.
 M.precompute_commands = function()
-  for key, _ in pairs(mind_keymap.keymaps.normal) do
-    local cmd = M.commands[mind_keymap.keymaps.normal[key]]
+  for key, c in pairs(mind_keymap.keymaps.normal) do
+    if type(c) == 'string' then
+      local cmd = M.commands[mind_keymap.keymaps.normal[key]]
 
-    if (cmd ~= nil) then
-      mind_keymap.keymaps.normal[key] = cmd
+      if (cmd ~= nil) then
+        mind_keymap.keymaps.normal[key] = cmd
+      end
     end
   end
 
-  for key, _ in pairs(mind_keymap.keymaps.selection) do
-    local cmd = M.commands[mind_keymap.keymaps.selection[key]]
+  for key, c in pairs(mind_keymap.keymaps.selection) do
+    if type(c) == 'string' then
+      local cmd = M.commands[mind_keymap.keymaps.selection[key]]
 
-    if (cmd ~= nil) then
-      mind_keymap.keymaps.selection[key] = cmd
+      if (cmd ~= nil) then
+        mind_keymap.keymaps.selection[key] = cmd
+      end
     end
   end
 end
