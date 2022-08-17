@@ -19,6 +19,12 @@ return {
     data_header = '# %s',
   },
 
+  -- tree options
+  tree = {
+    -- automatically create nodes (when looking for paths for example)
+    automatic_creation = true,
+  },
+
   -- UI options
   ui = {
     -- default width of the tree view window

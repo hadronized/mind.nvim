@@ -379,15 +379,25 @@ Arguments:~
 Return:~
     {parent}, {node} the parent and the node if found, `nil` otherwise
 
-`mind.node.get_node_by_path(`{tree}`,` {path}`)`          *mind.node.get_node_by_path*
-    Get a node by path, along with its parent.
+`mind.node.get_node_by_path(`
+  {tree}`,`
+  {path},
+  {create},
+`)`          *mind.node.get_node_by_path*
+    Get a node by {path} in {tree}, along with its parent.
 
     A path has the form `/Node1/Node2/…`, where `/` refers to the root and
     each segment is the name of a node.
 
+    If {create} is set to `true`, non-existing nodes (including the leaf) will
+    be created automatically with the segment name. For instance, in an empty
+    tree with only a root, looking for `/Node1/Node2` with {create} set to
+    `true` will create the nodes `/Node1` and `/Node2`.
+
 Arguments:~
-    {tree} the tree to lookup the node in.
-    {path} the path to lookup with.
+    {tree}   the tree to lookup the node in.
+    {path}   the path to lookup with.
+    {create} automatically create nodes.
 
 Return:~
     {parent}, {node} the parent and the node if found, `nil` otherwise.
@@ -545,6 +555,21 @@ Default:~
 
 Default:~
     `data_header = "# %s"`
+
+                                                              *mind-config-tree
+The `tree` section groups configuration options about tree behaviors and
+setup.
+
+`tree.automatic_creation`                    *mind-config-tree.automatic_creation*
+    Whether to automatically create nodes.
+
+    This is mostly used with node paths, such as in `/Node1/Node2/…`. When
+    this option is set, any non-existing nodes, including leaves, will be
+    automatically created and they will be given textx contents based on the
+    path segments.
+
+Default:~
+    `automatic_creation = true`
 
                                                                 *mind-config-ui
 The `ui` section is all about user interactivity and rendering.
