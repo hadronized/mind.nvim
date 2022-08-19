@@ -60,8 +60,8 @@ end
 -- If `use_global` is set to `true`, will use the global persistence location.
 M.open_project = function(use_global)
   M.wrap_project_tree_fn(
-    function(tree, opts)
-      mind_commands.open_tree(tree, mind_state.get_project_data_dir(M.opts), opts)
+    function(args)
+      mind_commands.open_tree(args.tree, args.data_dir, args.opts)
     end,
     use_global,
     M.opts
@@ -76,7 +76,11 @@ end
 -- Wrap a function call expecting the main tree.
 M.wrap_main_tree_fn = function(f, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
-  local args = { tree = mind_state.state.tree, data_dir = opts.persistence.data_dir, opts = opts }
+  local args = {
+    tree = mind_state.state.tree,
+    data_dir = opts.persistence.data_dir,
+    opts = opts
+  }
   f(args)
 end
 
@@ -105,7 +109,13 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     tree = mind_state.local_tree
   end
 
-  f(tree, opts)
+  local args = {
+    tree = tree,
+    data_dir = mind_state.get_project_data_dir(opts),
+    opts = opts
+  }
+
+  f(args)
 end
 
 return M

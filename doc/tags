@@ -8,6 +8,7 @@ mind-command-add_inside_end	mind.txt	/*mind-command-add_inside_end*
 mind-command-add_inside_start	mind.txt	/*mind-command-add_inside_start*
 mind-command-change_icon	mind.txt	/*mind-command-change_icon*
 mind-command-delete	mind.txt	/*mind-command-delete*
+mind-command-make_url	mind.txt	/*mind-command-make_url*
 mind-command-move_above	mind.txt	/*mind-command-move_above*
 mind-command-move_below	mind.txt	/*mind-command-move_below*
 mind-command-move_inside_end	mind.txt	/*mind-command-move_inside_end*
@@ -35,9 +36,11 @@ mind-config-ui.highlight.node_parent	mind.txt	/*mind-config-ui.highlight.node_pa
 mind-config-ui.highlight.node_root	mind.txt	/*mind-config-ui.highlight.node_root*
 mind-config-ui.highlight.open_marker	mind.txt	/*mind-config-ui.highlight.open_marker*
 mind-config-ui.highlight.select_marker	mind.txt	/*mind-config-ui.highlight.select_marker*
+mind-config-ui.highlight.url_marker	mind.txt	/*mind-config-ui.highlight.url_marker*
 mind-config-ui.local_marker	mind.txt	/*mind-config-ui.local_marker*
 mind-config-ui.root_marker	mind.txt	/*mind-config-ui.root_marker*
 mind-config-ui.select_marker	mind.txt	/*mind-config-ui.select_marker*
+mind-config-ui.url_marker	mind.txt	/*mind-config-ui.url_marker*
 mind-config-ui.width	mind.txt	/*mind-config-ui.width*
 mind-contents	mind.txt	/*mind-contents*
 mind-highlights	mind.txt	/*mind-highlights*
