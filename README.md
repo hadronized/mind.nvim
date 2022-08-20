@@ -1,3 +1,5 @@
+<h1 align="center">mind.nvim</h1>
+
 <p align="center">
   <img src="https://user-images.githubusercontent.com/506592/185751027-2d5b31b7-22ac-4405-9945-b25bf6344760.png"/>
 </p>
