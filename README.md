@@ -69,8 +69,8 @@ On the other side, a local project tree is what it means: it lives in the `cwd`,
 
 Besides that, **Mind** allows you to manipulate trees and nodes. Feature set:
 
-- Everything is interactive and relies on the most recent features of Neovim, including `vim.input` and `vim.select`.
-  Very few dependencies on other plugins, so you can customize the UI by using the plugins you love.
+- Everything is interactive and relies on the most recent features of Neovim, including `vim.ui.input` and
+  `vim.ui.select`. Very few dependencies on other plugins, so you can customize the UI by using the plugins you love.
 - Cursor-base interaction. Open a tree and start interacting with it!
   - Expand / collapse nodes.
   - Add a node to a tree by adding it before or after the current node, or by adding it inside the current node at the
