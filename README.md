@@ -104,7 +104,7 @@ This plugin was written against Neovim 0.8, which is currently a nightly version
 Add this to your Lua code:
 
 ```lua
-require'hop'.setup()
+require'mind'.setup()
 ```
 
 To get a default experience. Feel free to customize later the `setup` invocation (`:h mind.setup`).
