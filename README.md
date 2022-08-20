@@ -124,7 +124,7 @@ dependency to be sure your config will not break when Mind gets updated.
 
 ### Nightly users
 
-Hop supports nightly releases of Neovim. However, keep in mind that if you are on a nightly version, you must be **on
+Mind supports nightly releases of Neovim. However, keep in mind that if you are on a nightly version, you must be **on
 the last one**. If you are not, then you are exposed to Neovim compatibility issues / breakage.
 
 # Usage
