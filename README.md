@@ -1,76 +1,140 @@
-# mind.lua, a plugin for notetaking and task workflows
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/506592/185751027-2d5b31b7-22ac-4405-9945-b25bf6344760.png"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/issues/phaazon/mind.nvim?color=cyan&style=for-the-badge"/>
+  <img src="https://img.shields.io/github/issues-pr/phaazon/mind.nvim?color=green&style=for-the-badge"/>
+  <img src="https://img.shields.io/github/last-commit/phaazon/mind.nvim?style=for-the-badge"/>
+  <img src="https://img.shields.io/github/v/tag/phaazon/mind.nvim?color=pink&label=release&style=for-the-badge"/>
+</p>
+
+<p align="center">
+  <a href="#installation">Install</a> · <a href="https://github.com/phaazon/mind.nvim/wiki">Wiki</a> · <a href="https://github.com/phaazon/mind.nvim/wiki/Screenshots">Screenshots</a>
+</p>
 
 This plugin is a new take on note taking and task workflows. The idea is derived from using several famous plugins, such
-as [org-mode] or even standalone applications, like [Notion].
+as [org-mode] or even standalone applications, like [Notion], and add new and interesting ideas.
 
 <!-- vim-markdown-toc GFM -->
 
-* [Presentation](#presentation)
+* [Motivation](#motivation)
+* [Features](#features)
+* [Getting started](#getting-started)
+  * [Installation](#installation)
+    * [Important note about versioning](#important-note-about-versioning)
+    * [Nightly users](#nightly-users)
+* [Usage](#usage)
+* [Keybindings](#keybindings)
 
 <!-- vim-markdown-toc -->
 
-# Presentation
+# Motivation
 
-The plugin is based on a simple concept yet powerful one: trees. A tree is a special kind of graph. In that graph, every
-node can have as many children as they want, and there is only one parent for each children. The graph holds itself
-completely with the root node, which has the children nodes making the rest of the graph.
+**Mind** is an organizer tool for Neovim. It can be used to accomplish and implement a wide variety of workflows. It is
+designed to quickly add items in trees. _Why a tree?_ Well, list of things like TODO lists are great but they lack the
+organization part. Most of them can be gathered in “lists of lists” — you probably have that on your phone. A list of
+list is basically a tree. But editing and operating a list of list is annoying, so it’s better to have a tool that has
+the concept of a node and a tree as a primitive.
 
-That concept is really powerful because it can be applied to almost everything in life. A list is a flat graph (with
-depth = 1). A software project could be seen as a graph, where the top node is the project itself, and sub-projects are
-children nodes. At a deep enough stage, you find code files, and you can still imagine that those files have children
-(the actual code AST), etc. etc.
+**Mind** trees can be used to implement workflows like:
 
-Ideas, notes, tasks, etc. can also be imagined as being part of such a graph. We have a natural tendency to want to tidy
-things by classifying them. For instance, you might have two ideas that both belong to “Infrastructure”, and you also
-have a couple of meeting notes that could be put in a “Meeting” node.
+- Journaling. Have a node for each day, which parent will be the month, which parent will be the year, etc.
+- Note taking. You are in the middle of a meeting and you heard something important? Don’t write that in a Markdown
+  document in your `~/documents` that is probably alreaddy a mess: open your **Mind** tree and add it there!
+- “Personal wiki.” Because of the nature of a tree, it is convenient to organize your personal notes about your work
+  services, other teams’ products, OKRs, blablabla by simply creating trees in trees!
+- Task management. Why not having a tasks tree with three or four sub-trees for your backlog, on-going work, finished
+  work and cancelled tasks? It’s all possible!
 
-This plugin generalizes the concept of graph to allow people to create mind graphs. A mind graph has the following
-properties:
+The possibilities are endless.
 
-- Each node is either a tree or a leaf.
-- A tree has a name and from 0 to many children.
-- A leaf has a name and is either a file or a special mind object. More on that later.
+# Features
 
-Any kind of node has a _path_ in the mind tree. That path is simply the concatenation of its transitive parents’ names
-with its own name. For instance, in the following tree:
+**Mind** features two main concepts; global trees and local trees:
 
+- A global tree is a tree that is unique to your machine / computer. Opening your main **Mind** tree from Neovim will
+  always open and edit that tree. It’s basically your central place for your **Mind** nodes.
+- A local tree is a tree that is relative to a given directory. **Mind** implements a `cwd`-based local form of tree, so
+  you can even share those trees with other people (as long as they use **Mind** as well).
+
+Atop of that, **Mind** has the concept of “project” trees, which are either a global tree, or a local tree. A global
+project tree is stored at the same place as your main tree and the purpose of such a tree is to be opened only when your
+`cwd` is the same as the tree, but you don’t want the tree to be in the actual `cwd`. That can be the case if you work
+on a project where you don’t want to check the tree in Git or any versioning system.
+
+On the other side, a local project tree is what it means: it lives in the `cwd`, under `.mind`, basically.
+
+Besides that, **Mind** allows you to manipulate trees and nodes. Feature set:
+
+- Everything is interactive and relies on the most recent features of Neovim, including `vim.input` and `vim.select`.
+  Very few dependencies on other plugins, so you can customize the UI by using the plugins you love.
+- Cursor-base interaction. Open a tree and start interacting with it!
+  - Expand / collapse nodes.
+  - Add a node to a tree by adding it before or after the current node, or by adding it inside the current node at the
+    beginning or end of its chilren.
+  - Rename the node under the cursor.
+  - Change the icon of the node under the cursor.
+  - Delete the node under the cursor with a confirmation input.
+  - Select a node to perform further operations on it.
+  - Move nodes around!
+  - Select nodes by path! — e.g. `/Tasks/On-going/3345: do this`
+- Supports user keybindings via keymaps. Keymaps are namespaced keybindings. They keymaps are fixed and defined by
+  **Mind**, and users can decide what to put in them. For instance, you have the _default_ keymap for default
+  navigation, _selection_ keymap for when a node is selected, etc. etc.
+- Nodes are just text, icons and some metadata by default. You can however decide to associate them with a _data file_,
+  for which the type is user-defined (by default Markdown), or you can turn them into URL nodes.
+- A data node will open its file when triggered.
+- A URL node will open its link when triggered.
+- A well documented Lua API to create your own automatic workflow that don’t require user interaction!
+- More to come!
+
+# Getting started
+
+This section will guide you through the list of steps you must take to be able to get started with **Mind**.
+
+This plugin was written against Neovim 0.8, which is currently a nightly version. This plugin _might_ not work:
+
+- With a version of Neovim before 0.8.
+
+## Installation
+
+Add this to your Lua code:
+
+```lua
+require'hop'.setup()
 ```
-v a
-  > b
-  v c
-    > e
-  > d
-```
 
-`a`’s path is `/a`, `b`’s path is `/a/b` and `e`’s path is `/a/c/e`.
+To get a default experience. Feel free to customize later the `setup` invocation (`:h mind.setup`).
 
-As said earlier, leaves can be different things. A file leaf is simply a node that points to a file. The name of the file
-is a unique name and is not related to its node name. Hence, file name are automatically generated, and the files don’t
-have to follow a tree-like structure (we actually don’t really care about that property).
+### Important note about versioning
 
-A leaf can also be a functional node. Functional nodes are nodes that compute their names and content on the fly, when
-we try to expand them. For instance, we could imagine a functional node at `/Journal/Today` that would compute the
-current date and would return the node at the path `/Journal/{year}/{month}/{day}`. If that node doesn’t exist, it would
-create it, insert it in the tree and return it.
+This plugin implements [SemVer] via git branches and tags. Versions are prefixed with a `v`, and only patch versions
+are git tags. Major and minor versions are git branches. You are **very strongly advised** to use a major version
+dependency to be sure your config will not break when Mind gets updated.
 
-Functional nodes allow to build more complex workflows, such as `/Tasks/Critical`, that would get all the current tasks,
-filter them by criticical state and would build a node with only those tasks. That last point leads us to the last kind
-of node: link nodes.
+- Major versions always have the form `vM`, where `M` is the major version. — e.g. `v2`.
+- Minor versions always have the form `vM.N`, where `M` is the major version and `N` the minor. — e.g. `v2.0`.
+- Patch versions always have the form `vM.N.P`, where `M` is the major version, `N` the minor and `P` the patch. — e.g.
+  `v2.0.0`.
 
-A link node is simply a node that points to another one. In that sense, a link node simply has a name, and its content
-is simply a path. Link nodes do not point to files; only other nodes.
+**It is strongly discouraged to use `master` as that branch can introduce breaking changes at any time.**
 
-Because people will want to generate links for note taking, it’s important to provide some functions to automatically
-generate links. Imagine you have opened a file node at `/Notes/Technical/Language/Rust` and you want to reference
-`/Notes/Technical/Language/C`. Instead of manually looking for the associated file, all you have to do is to call the
-function that will automatically pick the file name for you. That’s pretty simple: you give it the path, it gives back
-the file name and insert it (it could support Markdown by default). The link would be something like:
+### Nightly users
 
-```markdown
-[description of the link](/some/path/id-of-the-node)
-```
+Hop supports nightly releases of Neovim. However, keep in mind that if you are on a nightly version, you must be **on
+the last one**. If you are not, then you are exposed to Neovim compatibility issues / breakage.
 
-A function could be provided to migrate links automatically if the prefix changes.
+# Usage
+
+A wiki is planned, but for now, you can simply have a look at `:h mind-usage` and `:h mind-commands`.
+
+# Keybindings
+
+The user commands defined by Mind are mapped to no keybindings by default. However, once you have a tree open,
+buffer-local keybindings are automatically inserted. You can change them by setting they behavior you want in
+`opts.keymaps`. More information about that in `:h mind-config-keymaps`.
 
 [org-mode]: https://orgmode.org/
 [Notion]: https://www.notion.so/
+[SemVer]: https://semver.org
