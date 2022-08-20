@@ -685,6 +685,45 @@ Default:~
 Default:~
     `select_marker = "Error"`
 
+                                                           *mind-config-keymaps*
+The `keymaps` sub-section is used to set keybindings for keymaps while
+interacting with a tree. It has two sub-section: `keymaps.normal` for every
+keybindings in the normal keymap, and `keymaps.selection` for every
+keybindings in the selection keymap (i.e. when a node is selected).
+
+For a given keymap, a table is associated for which the key are the actual key
+to press and the value are either a string representing the command name (see
+|mind-lua-api-commands-declarative|).
+
+Default:~
+    normal = {
+      ["<cr>"] = "open_data",
+      ["<tab>"] = "toggle_node",
+      ["/"] = "select_path",
+      I = "add_inside_start",
+      i = "add_inside_end",
+      d = "delete",
+      O = "add_above",
+      o = "add_below",
+      q = "quit",
+      r = "rename",
+      R = "change_icon",
+      u = "make_url",
+      x = "select",
+    }
+
+    selection = {
+      ["<cr>"] = "open_data",
+      ["<tab>"] = "toggle_node",
+      ["/"] = "select_path",
+      I = "move_inside_start",
+      i = "move_inside_end",
+      O = "move_above",
+      o = "move_below",
+      q = "quit",
+      x = "select",
+    }
+
 ==============================================================================
 HIGHLIGHTS                                                     *mind-highlights*
 
