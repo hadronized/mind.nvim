@@ -90,9 +90,9 @@ end
 M.wrap_project_tree_fn = function(f, use_global, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
 
+  local cwd = vim.fn.getcwd()
   local tree
-  if (mind_state.local_tree == nil or use_global) then
-    local cwd = vim.fn.getcwd()
+  if (use_global) then
     tree = mind_state.state.projects[cwd]
 
     if (tree == nil) then
@@ -106,6 +106,16 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
       mind_state.state.projects[cwd] = tree
     end
   else
+    if mind_state.local_tree == nil then
+      mind_state.local_tree = {
+        contents = {
+          { text = cwd:match('^.+/(.+)$') },
+        },
+        type = mind_node.TreeType.LOCAL_ROOT,
+        icon = opts.ui.root_marker,
+      }
+    end
+
     tree = mind_state.local_tree
   end
 

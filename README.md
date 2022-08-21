@@ -26,7 +26,6 @@ as [org-mode] or even standalone applications, like [Notion], and add new and in
   * [Installation](#installation)
     * [Important note about versioning](#important-note-about-versioning)
     * [Nightly users](#nightly-users)
-  * [(very temporary) Special actions to take](#very-temporary-special-actions-to-take)
 * [Usage](#usage)
 * [Keybindings](#keybindings)
 
@@ -127,21 +126,6 @@ dependency to be sure your config will not break when Mind gets updated.
 
 Mind supports nightly releases of Neovim. However, keep in mind that if you are on a nightly version, you must be **on
 the last one**. If you are not, then you are exposed to Neovim compatibility issues / breakage.
-
-## (very temporary) Special actions to take
-
-For now, Mind doesn’t create persistence directories by itself. You have to help it a bit. It’s quite simple: by
-default, Mind will use `~/.local/share/mind.nvim`. You need to run the following command:
-
-```sh
-mkdir -p ~/.local/share/mind.nvim/data
-```
-
-If you want to use a local tree, at the top of your project (basically the `cwd`), run the following command:
-
-```sh
-mkdir -p .mind/data
-```
 
 # Usage
 

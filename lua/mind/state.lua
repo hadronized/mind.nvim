@@ -37,9 +37,7 @@ M.load_state = function(opts)
 
   local file = io.open(opts.persistence.state_path, 'r')
 
-  if (file == nil) then
-    notify('no global state', vim.log.levels.ERROR)
-  else
+  if (file ~= nil) then
     local encoded = file:read()
     file:close()
 
@@ -56,14 +54,7 @@ M.load_state = function(opts)
     file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
 
     if (file == nil) then
-      notify('no local state', vim.log.levels.ERROR)
-      M.local_tree = {
-        contents = {
-          { text = cwd:match('^.+/(.+)$') },
-        },
-        type = mind_node.TreeType.LOCAL_ROOT,
-        icon = opts.ui.root_marker,
-      }
+      notify('cannot open local Mind tree')
     else
       local encoded = file:read()
       file:close()
@@ -90,6 +81,13 @@ M.save_state = function(opts)
 
   M.pre_save()
 
+  local state_path = path:new(opts.persistence.state_path)
+
+  -- ensure the path exists
+  if not state_path:exists() then
+    state_path:touch({ parents = true })
+  end
+
   local file = io.open(opts.persistence.state_path, 'w')
 
   if (file == nil) then
@@ -104,18 +102,26 @@ M.save_state = function(opts)
   end
 
   -- if there is a local state, we write the local project
-  local cwd = vim.fn.getcwd()
-  local local_mind = path:new(cwd, '.mind')
-  if (local_mind:is_dir()) then
-    -- we have a local mind
-    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
+  if M.local_tree ~= nil then
+    local cwd = vim.fn.getcwd()
+    local local_mind = path:new(cwd, '.mind')
 
-    if (file == nil) then
-      notify(string.format('cannot save local project at %s', cwd), 4)
-    else
-      local encoded = vim.json.encode(M.local_tree)
-      file:write(encoded)
-      file:close()
+    -- ensure the path exists
+    if not local_mind:exists() then
+      local_mind:mkdir({ parents = true })
+    end
+
+    if (local_mind:is_dir()) then
+      -- we have a local mind
+      file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
+
+      if (file == nil) then
+        notify(string.format('cannot save local project at %s', cwd), 4)
+      else
+        local encoded = vim.json.encode(M.local_tree)
+        file:write(encoded)
+        file:close()
+      end
     end
   end
 end
@@ -144,9 +150,8 @@ end
 --
 -- If a local tree exists, its path data is returned. Otherwise, we use the one in opts.persistence.data_dir.
 M.get_project_data_dir = function(opts)
-  local local_mind = path:new('.mind/data')
-  if (local_mind:is_dir()) then
-    return tostring(local_mind)
+  if M.local_tree ~= nil then
+    return '.mind/data'
   end
 
   return opts.persistence.data_dir

@@ -1,4 +1,4 @@
-mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 20
+mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 21
 
 ==============================================================================
 CONTENTS                                                         *mind-contents*
