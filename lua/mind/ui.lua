@@ -97,33 +97,60 @@ end
 -- Render a node into a set of lines.
 --
 -- That function will turn the node into a text line as well as its children, respecting the depth level.
-local function render_node(node, depth, lines, hls, opts)
-  local line = string.rep(' ', depth * 2)
+local function render_node(node, indent, lines, hls, opts)
+  local line = indent
   local name, partial_hls = node_to_line(node, opts)
   local hl_col_start = #line
   local hl_line = #lines
+
+  hls[#hls + 1] = {
+    group = opts.ui.highlight.open_marker,
+    line = hl_line,
+    col_start = 0,
+    col_end = #line,
+  }
 
   if (node.children ~= nil) then
     if (node.is_expanded) then
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = opts.ui.highlight.open_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+      hls[#hls + 1] = {
+        group = opts.ui.highlight.open_marker,
+        line = hl_line,
+        col_start = hl_col_start,
+        col_end = hl_col_end
+      }
+
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
         hl_col_start = hl_col_end
         hl_col_end = hl_col_start + hl.width
-        hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+        hls[#hls + 1] = {
+          group = hl.group,
+          line = hl_line,
+          col_start = hl_col_start,
+          col_end = hl_col_end
+        }
       end
 
-      depth = depth + 1
+      indent = indent .. opts.ui.empty_indent_marker .. ' '
       for _, child in ipairs(node.children) do
-        render_node(child, depth, lines, hls, opts)
+        render_node(child, indent, lines, hls, opts)
       end
     else
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = opts.ui.highlight.closed_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+      hls[#hls + 1] = {
+        group = opts.ui.highlight.closed_marker,
+        line = hl_line,
+        col_start = hl_col_start,
+        col_end = hl_col_end
+      }
+
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
@@ -148,7 +175,7 @@ end
 local function render_tree(tree, opts)
   local lines = {}
   local hls = {}
-  render_node(tree, 0, lines, hls, opts)
+  render_node(tree, '', lines, hls, opts)
   return lines, hls
 end
 
