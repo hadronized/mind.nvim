@@ -100,7 +100,7 @@ M.commands = {
 -- If it doesn’t exist, create it first.
 M.open_data = function(tree, node, directory, opts)
   if node.url then
-    vim.fn.system(string.format('open %s', node.url))
+    vim.fn.system(string.format('%s %s', opts.url_open, node.url))
     return
   end
 

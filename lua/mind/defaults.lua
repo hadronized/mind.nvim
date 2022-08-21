@@ -27,6 +27,9 @@ return {
 
   -- UI options
   ui = {
+    -- commands used to open URLs
+    url_open = 'xdg-open',
+
     -- default width of the tree view window
     width = 30,
 
