@@ -97,8 +97,22 @@ end
 -- Render a node into a set of lines.
 --
 -- That function will turn the node into a text line as well as its children, respecting the depth level.
-local function render_node(node, indent, lines, hls, opts)
-  local line = indent
+local function render_node(node, indent, is_last, lines, hls, opts)
+  local line
+
+  if is_last then
+    if node.type ~= nil then
+      line = indent
+      indent = indent
+    else
+      line = indent .. opts.ui.node_indent_marker .. ' '
+      indent = indent .. '  '
+    end
+  else
+    line = indent .. opts.ui.empty_indent_marker .. ' '
+    indent = indent .. opts.ui.empty_indent_marker .. ' '
+  end
+
   local name, partial_hls = node_to_line(node, opts)
   local hl_col_start = #line
   local hl_line = #lines
@@ -136,10 +150,11 @@ local function render_node(node, indent, lines, hls, opts)
         }
       end
 
-      indent = indent .. opts.ui.empty_indent_marker .. ' '
-      for _, child in ipairs(node.children) do
-        render_node(child, indent, lines, hls, opts)
+      for i = 1, #node.children - 1 do
+        local child = node.children[i]
+        render_node(child, indent, false, lines, hls, opts)
       end
+      render_node(node.children[#node.children], indent, true, lines, hls, opts)
     else
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
@@ -175,7 +190,7 @@ end
 local function render_tree(tree, opts)
   local lines = {}
   local hls = {}
-  render_node(tree, '', lines, hls, opts)
+  render_node(tree, '', true, lines, hls, opts)
   return lines, hls
 end
 
@@ -184,6 +199,7 @@ M.render = function(tree, bufnr, opts)
   local lines, hls = render_tree(tree, opts)
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
+  vim.api.nvim_buf_set_var(bufnr, 'buftype', 'nofile')
 
   -- set the lines for the whole buffer, replacing everything
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)

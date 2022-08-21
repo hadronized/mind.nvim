@@ -1,7 +1,7 @@
 <h1 align="center">mind.nvim</h1>
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/506592/185751027-2d5b31b7-22ac-4405-9945-b25bf6344760.png"/>
+  <img src="https://user-images.githubusercontent.com/506592/185793543-e12baf93-8329-4e3b-96d2-da38547691ee.png"/>
 </p>
 
 <p align="center">
