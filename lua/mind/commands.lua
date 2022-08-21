@@ -81,7 +81,7 @@ M.commands = {
 
   move_below = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
-    mind_state.save_state(opts)
+    mind_state.save_state(args.opts)
   end,
 
   move_inside_start = function(args)
