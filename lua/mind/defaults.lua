@@ -30,6 +30,12 @@ return {
     -- default width of the tree view window
     width = 30,
 
+    -- marker used for empty indentation
+    empty_indent_marker = '│',
+
+    -- marker used for node indentation
+    node_indent_marker = '└',
+
     -- marker used to identify the root of the tree (left to its name)
     root_marker = ' ',
 

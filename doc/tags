@@ -23,6 +23,7 @@ mind-commands	mind.txt	/*mind-commands*
 mind-config	mind.txt	/*mind-config*
 mind-config-edit.data_extension	mind.txt	/*mind-config-edit.data_extension*
 mind-config-edit.data_header	mind.txt	/*mind-config-edit.data_header*
+mind-config-keymaps	mind.txt	/*mind-config-keymaps*
 mind-config-persistence.data_dir	mind.txt	/*mind-config-persistence.data_dir*
 mind-config-persistence.state_path	mind.txt	/*mind-config-persistence.state_path*
 mind-config-tree.automatic_creation	mind.txt	/*mind-config-tree.automatic_creation*

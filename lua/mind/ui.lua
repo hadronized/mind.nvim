@@ -97,33 +97,75 @@ end
 -- Render a node into a set of lines.
 --
 -- That function will turn the node into a text line as well as its children, respecting the depth level.
-local function render_node(node, depth, lines, hls, opts)
-  local line = string.rep(' ', depth * 2)
+local function render_node(node, indent, is_last, lines, hls, opts)
+  local line
+
+  if is_last then
+    if node.type ~= nil then
+      line = indent
+      indent = indent
+    else
+      line = indent .. opts.ui.node_indent_marker .. ' '
+      indent = indent .. '  '
+    end
+  else
+    line = indent .. opts.ui.empty_indent_marker .. ' '
+    indent = indent .. opts.ui.empty_indent_marker .. ' '
+  end
+
   local name, partial_hls = node_to_line(node, opts)
   local hl_col_start = #line
   local hl_line = #lines
+
+  hls[#hls + 1] = {
+    group = opts.ui.highlight.open_marker,
+    line = hl_line,
+    col_start = 0,
+    col_end = #line,
+  }
 
   if (node.children ~= nil) then
     if (node.is_expanded) then
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = opts.ui.highlight.open_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+      hls[#hls + 1] = {
+        group = opts.ui.highlight.open_marker,
+        line = hl_line,
+        col_start = hl_col_start,
+        col_end = hl_col_end
+      }
+
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
         hl_col_start = hl_col_end
         hl_col_end = hl_col_start + hl.width
-        hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+        hls[#hls + 1] = {
+          group = hl.group,
+          line = hl_line,
+          col_start = hl_col_start,
+          col_end = hl_col_end
+        }
       end
 
-      depth = depth + 1
-      for _, child in ipairs(node.children) do
-        render_node(child, depth, lines, hls, opts)
+      for i = 1, #node.children - 1 do
+        local child = node.children[i]
+        render_node(child, indent, false, lines, hls, opts)
       end
+      render_node(node.children[#node.children], indent, true, lines, hls, opts)
     else
       local mark = ' '
       local hl_col_end = hl_col_start + #mark
-      hls[#hls + 1] = { group = opts.ui.highlight.closed_marker, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+
+      hls[#hls + 1] = {
+        group = opts.ui.highlight.closed_marker,
+        line = hl_line,
+        col_start = hl_col_start,
+        col_end = hl_col_end
+      }
+
       lines[#lines + 1] = line .. mark .. name
 
       for _, hl in ipairs(partial_hls) do
@@ -148,7 +190,7 @@ end
 local function render_tree(tree, opts)
   local lines = {}
   local hls = {}
-  render_node(tree, 0, lines, hls, opts)
+  render_node(tree, '', true, lines, hls, opts)
   return lines, hls
 end
 
@@ -157,6 +199,7 @@ M.render = function(tree, bufnr, opts)
   local lines, hls = render_tree(tree, opts)
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
+  vim.api.nvim_buf_set_var(bufnr, 'buftype', 'nofile')
 
   -- set the lines for the whole buffer, replacing everything
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
