@@ -199,7 +199,7 @@ M.render = function(tree, bufnr, opts)
   local lines, hls = render_tree(tree, opts)
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
-  vim.api.nvim_buf_set_var(bufnr, 'buftype', 'nofile')
+  vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
 
   -- set the lines for the whole buffer, replacing everything
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
