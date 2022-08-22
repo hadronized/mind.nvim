@@ -105,6 +105,7 @@ return {
     normal = {
       ['<cr>'] = 'open_data',
       ['<tab>'] = 'toggle_node',
+      ['<s-tab>'] = 'toggle_parent',
       ['/'] = 'select_path',
       I = 'add_inside_start',
       i = 'add_inside_end',
@@ -122,6 +123,7 @@ return {
     selection = {
       ['<cr>'] = 'open_data',
       ['<tab>'] = 'toggle_node',
+      ['<s-tab>'] = 'toggle_parent',
       ['/'] = 'select_path',
       I = 'move_inside_start',
       i = 'move_inside_end',
