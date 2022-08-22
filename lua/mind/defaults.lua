@@ -1,5 +1,16 @@
 -- Default configuration options.
 
+-- URL opener depends on the platform.
+local sysname = vim.loop.os_uname().sysname
+local url_open
+if sysname == 'Linux' then
+  url_open = 'xdg-open'
+elseif sysname == 'Darwin' then
+  url_open = 'open'
+elseif sysname == 'Windows' then
+  url_open = 'start ""'
+end
+
 return {
   -- persistence, both for the tree state and data files
   persistence = {
@@ -28,7 +39,7 @@ return {
   -- UI options
   ui = {
     -- commands used to open URLs
-    url_open = 'xdg-open',
+    url_open = url_open,
 
     -- default width of the tree view window
     width = 30,

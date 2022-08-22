@@ -581,18 +581,20 @@ setup.
 Default:~
     `automatic_creation = true`
 
-                                                                *mind-config-ui
+                                                                *mind-config-ui*
 The `ui` section is all about user interactivity and rendering.
 
 `ui.url_open`                                            *mind-config-ui.url_open*
     Command to open URL.
 
-    The default value should be enough but you might need to tweak it,
-    especially if you are not on a XDG platform. Linux users should keep using
-    the default `xdg-open` and macOS users can use `open`.
+    The default value should be enough but you can still tweak it.
 
 Default:~
-    `url_open = "xdg-open"`
+    The default value is platform-dependent.
+
+    On Linux, `xdg-open` is used.
+    On macOS, `open` is used.
+    On Windows, `start ""` is used.
 
 `ui.width`                                                  *mind-config-ui.width*
     Width of the tree view window.
