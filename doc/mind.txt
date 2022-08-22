@@ -1,4 +1,4 @@
-mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 21
+mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 22
 
 ==============================================================================
 CONTENTS                                                         *mind-contents*
@@ -531,7 +531,7 @@ the way it works. Some Lua functions, especially the ones from the
 |mind-lua-api-main| API, also takes options that can override the ones defined
 in |mind.setup|.
 
-                                                       *mind-config-persistence
+                                                       *mind-config-persistence*
 The `persistence` section of the configuration contains options to specify
 where trees and data files are stored.
 
@@ -547,7 +547,7 @@ Default:~
 Default:~
     `data_dir = "~/.local/share/mind.nvim/data"`
 
-                                                              *mind-config-edit
+                                                              *mind-config-edit*
 The `edit` section is a small and minimal configuration layer for editing data
 files. Mind is not about markup but we can still provide a couple of
 interesting features.
@@ -566,7 +566,7 @@ Default:~
 Default:~
     `data_header = "# %s"`
 
-                                                              *mind-config-tree
+                                                              *mind-config-tree*
 The `tree` section groups configuration options about tree behaviors and
 setup.
 
@@ -633,7 +633,7 @@ Default:~
 Default:~
     `select_marker = ""`
 
-                                                      *mind-config-ui-highlight
+                                                      *mind-config-ui-highlight*
 The `ui.highlight` sub-section is used to change the highlighting mechanism of
 Mind.
 
