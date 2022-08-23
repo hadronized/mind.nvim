@@ -16,10 +16,11 @@ M.new_data_file = function(dir, name, extension, content, should_expand)
   end
 
   -- filter the name
-  name = name:gsub('[^%w-]', ' ')
-  name = name:gsub('%s+', '-')
-  name = name:gsub('^-', '')
-  name = name:gsub('-$', '')
+  name = name:gsub('[^%w-]', ' ') -- remove anything that is not a word or a dash
+  name = name:gsub('%s+', '-') -- replace consecutive spaces with a single one
+  name = name:gsub('-+', '-') -- replace consecutive dashes with a single one
+  name = name:gsub('^-', '') -- remove leading dash
+  name = name:gsub('-$', '') -- remove trailing dash
 
   local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name .. extension
   local p = path:new(dir, filename)
