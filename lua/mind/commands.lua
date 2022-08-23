@@ -130,14 +130,26 @@ M.open_data = function(tree, node, directory, opts)
     mind_ui.render(tree, 0, opts)
   end
 
-  local winnr = require('window-picker').pick_window()
+  -- list all the visible windows and filter the one that have a nofile (likely to be the mind, but it could also be
+  -- file browser or something)
+  local winnr
+  for _, tabpage_winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local bufnr = vim.api.nvim_win_get_buf(tabpage_winnr)
+    local buftype = vim.api.nvim_buf_get_option(bufnr, 'buftype')
 
-  if (winnr ~= nil) then
-    vim.api.nvim_set_current_win(winnr)
+    if buftype == '' then
+      winnr = tabpage_winnr
+      break
+    end
   end
 
-  vim.api.nvim_cmd({ cmd = 'e', args = { data } }, {})
-
+  -- pick the first window in the list; if it’s empty, we open a new one
+  if winnr == nil then
+    vim.api.nvim_exec('rightb vsp ' .. data, false)
+  else
+    vim.api.nvim_set_current_win(winnr)
+    vim.api.nvim_exec('e ' .. data, false)
+  end
 end
 
 -- Open the data file associated with a node for the given line.
