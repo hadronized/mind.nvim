@@ -205,6 +205,9 @@ keys are documented here.
 `'toggle_node'`                                         *mind-command-toggle_node*
     Toggle the node under the cursor.
 
+`'toggle_parent'`                                     *mind-command-toggle_parent*
+    Toggle the node’s parent under the cursor, if any.
+
 `'quit'`                                                       *mind-command-quit*
     Quit the tree if open.
 
@@ -711,6 +714,7 @@ Default:~
     normal = {
       ["<cr>"] = "open_data",
       ["<tab>"] = "toggle_node",
+      ["<s-tab>"] = "toggle_node",
       ["/"] = "select_path",
       I = "add_inside_start",
       i = "add_inside_end",
@@ -726,7 +730,7 @@ Default:~
 
     selection = {
       ["<cr>"] = "open_data",
-      ["<tab>"] = "toggle_node",
+      ["<s-tab>"] = "toggle_node",
       ["/"] = "select_path",
       I = "move_inside_start",
       i = "move_inside_end",

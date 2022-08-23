@@ -15,6 +15,11 @@ M.commands = {
     mind_state.save_state(args.opts)
   end,
 
+  toggle_parent = function(args)
+    M.toggle_node_parent_cursor(args.tree, args.opts)
+    mind_state.save_state(args.opts)
+  end,
+
   quit = function(args)
     M.reset()
     M.close(args.tree, args.opts)
@@ -507,6 +512,17 @@ end
 M.toggle_node_cursor = function(tree, opts)
   mind_ui.with_cursor(function(line)
     M.toggle_node_line(tree, line, opts)
+  end)
+end
+
+-- Toggle (expand / collapse) the node’s parent under the cursor, if any.
+M.toggle_node_parent_cursor = function(tree, opts)
+  mind_ui.with_cursor(function(line)
+    local parent, _ = mind_node.get_node_and_parent_by_line(tree, line)
+
+    if parent ~= nil then
+      M.toggle_node(tree, parent, opts)
+    end
   end)
 end
 
