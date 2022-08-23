@@ -5,98 +5,100 @@ local M = {}
 local mind_data = require'mind.data'
 local mind_keymap = require'mind.keymap'
 local mind_node = require'mind.node'
-local mind_state = require'mind.state'
 local mind_ui = require'mind.ui'
 local notify = require'mind.notify'.notify
 
 M.commands = {
   toggle_node = function(args)
     M.toggle_node_cursor(args.tree, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   toggle_parent = function(args)
     M.toggle_node_parent_cursor(args.tree, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   quit = function(args)
     M.reset()
     M.close(args.tree, args.opts)
+    return false
   end,
 
   add_above = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   add_below = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   add_inside_start = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   add_inside_end = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   delete = function(args)
     M.delete_node_cursor(args.tree, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   rename = function(args)
     M.rename_node_cursor(args.tree, args.opts)
     M.reset()
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   open_data = function(args)
     M.open_data_cursor(args.tree, args.data_dir, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   make_url = function(args)
     M.make_url_node_cursor(args.tree, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   change_icon = function(args)
     M.change_icon_cursor(args.tree, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   select = function(args)
     M.toggle_select_node_cursor(args.tree, args.opts)
+    return false
   end,
 
   select_path = function(args)
     M.select_node_path(args.tree, args.opts)
+    return false
   end,
 
   move_above = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   move_below = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   move_inside_start = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 
   move_inside_end = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
-    mind_state.save_state(args.opts)
+    return true
   end,
 }
 
@@ -540,7 +542,7 @@ M.toggle_node_parent_cursor = function(tree, opts)
 end
 
 -- Open and display a tree in a new window.
-M.open_tree = function(tree, data_dir, opts)
+M.open_tree = function(tree, data_dir, save_tree, opts)
   -- window
   vim.api.nvim_cmd({ cmd = 'vsp'}, {})
   vim.api.nvim_cmd({ cmd = 'wincmd', args = { 'H' } }, {})
@@ -557,7 +559,7 @@ M.open_tree = function(tree, data_dir, opts)
   mind_ui.render(tree, bufnr, opts)
 
   -- keymaps
-  mind_keymap.insert_keymaps(bufnr, tree, data_dir, opts)
+  mind_keymap.insert_keymaps(bufnr, tree, data_dir, save_tree, opts)
 end
 
 -- Close the tree.

@@ -48,7 +48,7 @@ M.get_keymap = function()
 end
 
 -- Insert keymaps into the given buffer.
-M.insert_keymaps = function(bufnr, tree, data_dir, opts)
+M.insert_keymaps = function(bufnr, tree, data_dir, save_tree, opts)
   local keyset = {}
 
   for key, _ in pairs(M.keymaps.normal) do
@@ -78,7 +78,10 @@ M.insert_keymaps = function(bufnr, tree, data_dir, opts)
         return
       end
 
-      cmd(args)
+      local should_save = cmd(args)
+      if should_save then
+        save_tree(opts)
+      end
     end, { buffer = bufnr, noremap = true, silent = true })
   end
 end

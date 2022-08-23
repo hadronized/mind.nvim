@@ -2,6 +2,7 @@ local mind_commands = require'mind.commands'
 local mind_keymap = require'mind.keymap'
 local mind_node = require'mind.node'
 local mind_state = require'mind.state'
+local notify = require'mind.notify'.notify
 
 local M = {}
 
@@ -39,8 +40,8 @@ end
 M.setup = function(opts)
   M.opts = vim.tbl_deep_extend('force', require'mind.defaults', opts or {})
 
-  -- load tree state
-  mind_state.load_state(M.opts)
+  -- ensure the paths are expanded
+  mind_state.expand_opts_paths(M.opts)
 
   -- keymaps
   mind_keymap.init_keymaps(M.opts)
@@ -52,7 +53,19 @@ end
 
 -- Open the main tree.
 M.open_main = function()
-  mind_commands.open_tree(mind_state.state.tree, M.opts.persistence.data_dir, M.opts)
+  M.wrap_main_tree_fn(
+    function(args)
+      mind_commands.open_tree(
+        args.tree,
+        args.opts.persistence.data_dir,
+        mind_state.save_main_state,
+        args.opts
+      )
+
+      return false
+    end,
+    M.opts
+  )
 end
 
 -- Open a project tree.
@@ -61,7 +74,14 @@ end
 M.open_project = function(use_global)
   M.wrap_project_tree_fn(
     function(args)
-      mind_commands.open_tree(args.tree, args.data_dir, args.opts)
+      mind_commands.open_tree(
+        args.tree,
+        args.data_dir,
+        use_global and mind_state.save_main_state or mind_state.save_local_state,
+        args.opts
+      )
+
+      return false
     end,
     use_global,
     M.opts
@@ -76,12 +96,20 @@ end
 -- Wrap a function call expecting the main tree.
 M.wrap_main_tree_fn = function(f, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
+
+  -- load the main tree
+  mind_state.load_main_state(opts)
+
   local args = {
     tree = mind_state.state.tree,
     data_dir = opts.persistence.data_dir,
     opts = opts
   }
-  f(args)
+
+  local should_save = f(args)
+  if should_save then
+    mind_state.save_main_state(opts)
+  end
 end
 
 -- Wrap a function call expecting a project tree.
@@ -98,7 +126,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     if (tree == nil) then
       tree = {
         contents = {
-          { text = cwd:match('^.+/(.+)$') },
+          { text = cwd:match('^.*/(.+)$') },
         },
         type = mind_node.TreeType.ROOT,
         icon = opts.ui.root_marker,
@@ -106,10 +134,14 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
       mind_state.state.projects[cwd] = tree
     end
   else
+    -- load the local state
+    mind_state.load_local_state()
+
     if mind_state.local_tree == nil then
+      notify('creating a new local tree')
       mind_state.local_tree = {
         contents = {
-          { text = cwd:match('^.+/(.+)$') },
+          { text = cwd:match('^.*/(.+)$') },
         },
         type = mind_node.TreeType.LOCAL_ROOT,
         icon = opts.ui.root_marker,
@@ -125,7 +157,14 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     opts = opts
   }
 
-  f(args)
+  local should_save = f(args)
+  if should_save then
+    if use_global then
+      mind_state.save_main_state(opts)
+    else
+      mind_state.save_local_state()
+    end
+  end
 end
 
 return M
