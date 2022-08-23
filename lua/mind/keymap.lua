@@ -1,4 +1,4 @@
--- Keymap and keybindings.
+-- Keymaps and keybindings.
 
 local M = {}
 

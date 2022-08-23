@@ -1,4 +1,5 @@
 local mind_commands = require'mind.commands'
+local mind_highlight = require'mind.highlight'
 local mind_keymap = require'mind.keymap'
 local mind_node = require'mind.node'
 local mind_state = require'mind.state'
@@ -49,6 +50,9 @@ M.setup = function(opts)
 
   -- user-commands
   create_user_commands()
+
+  -- highlights
+  mind_highlight.create_highlight_groups(M.opts)
 end
 
 -- Open the main tree.

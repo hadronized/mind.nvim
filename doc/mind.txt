@@ -638,7 +638,9 @@ Default:~
 
                                                       *mind-config-ui-highlight*
 The `ui.highlight` sub-section is used to change the highlighting mechanism of
-Mind.
+Mind. You can change them directly in your configuration file, or override
+them in a colorscheme, for instance. See |mind-highlights| for the latter
+option.
 
 `ui.highlight.closed_marker`              *mind-config-ui.highlight.closed_marker*
     Highlight used on closed marks.
@@ -743,7 +745,35 @@ Default:~
 ==============================================================================
 HIGHLIGHTS                                                     *mind-highlights*
 
-TODO
+`MindClosedMarker`                                      *mind-hl-MindClosedMarker*
+    Highl used on closed marks
+
+`MindOpenMarker`                                          *mind-hl-MindOpenMarker*
+  Highlight used on open marks.
+
+`MindNodeRoot`                                              *mind-hl-MindNodeRoot*
+  Highlight used on the name of the root node.
+
+`MindNodeLeaf`                                              *mind-hl-MindNodeLeaf*
+  Highlight used on regular nodes with no children.
+
+`MindNodeParent`                                          *mind-hl-MindNodeParent*
+  Highlight used on regular nodes with children.
+
+`MindLocalMarker`                                        *mind-hl-MindLocalMarker*
+  Highlight used on the local marker.
+
+`MindDataMarker`                                          *mind-hl-MindDataMarker*
+  Highlight used on the data marker.
+
+`MindURLMarker`                                            *mind-hl-MindURLMarker*
+  Highlight used on the URL marker.
+
+`MindModifierEmpty`                                    *mind-hl-MindModifierEmpty*
+  Highlight used on empty nodes (i.e. no children and no data).
+
+`MindSelectMarker`                                      *mind-hl-MindSelectMarker*
+  Highlight used on the selection marker.
 
 ==============================================================================
 LICENSE                                                           *mind-license*
