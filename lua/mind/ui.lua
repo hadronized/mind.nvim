@@ -4,7 +4,7 @@ local M = {}
 local mind_node = require'mind.node'
 
 -- Get the highlight group to use for a node given its status.
-local function node_hl(node, opts)
+local function node_hl(node)
   if (node.type == mind_node.TreeType.ROOT) then
     return 'MindNodeRoot'
   elseif (node.type == mind_node.TreeType.LOCAL_ROOT) then
@@ -21,7 +21,7 @@ local function node_to_line(node, opts)
   local name = ''
   local partial_hls = {}
 
-  local node_group = node_hl(node, opts)
+  local node_group = node_hl(node)
   -- the icon goes first
   if (node.icon ~= nil) then
     name = node.icon
