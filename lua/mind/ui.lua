@@ -6,13 +6,13 @@ local mind_node = require'mind.node'
 -- Get the highlight group to use for a node given its status.
 local function node_hl(node, opts)
   if (node.type == mind_node.TreeType.ROOT) then
-    return opts.ui.highlight.node_root
+    return 'MindNodeRoot'
   elseif (node.type == mind_node.TreeType.LOCAL_ROOT) then
-    return opts.ui.highlight.node_root
+    return 'MindNodeRoot'
   elseif (node.children ~= nil) then
-    return opts.ui.highlight.node_parent
+    return 'MindNodeParent'
   else
-    return opts.ui.highlight.node_leaf
+    return 'MindNodeLeaf'
   end
 end
 
@@ -44,9 +44,9 @@ local function node_to_line(node, opts)
   -- special case for the first highlight:
   if (node.type == nil) then
     if (node.children ~= nil) then
-      partial_hls[#partial_hls - #node.contents + 1].group = opts.ui.highlight.node_parent
+      partial_hls[#partial_hls - #node.contents + 1].group = 'MindNodeParent'
     elseif (node.data == nil and node.url == nil) then
-      partial_hls[#partial_hls - #node.contents + 1].group = opts.ui.highlight.modifier_empty
+      partial_hls[#partial_hls - #node.contents + 1].group = 'MindModifierEmpty'
     end
   end
 
@@ -56,7 +56,7 @@ local function node_to_line(node, opts)
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = opts.ui.highlight.local_marker,
+      group = 'MindLocalMarker',
       width = #marker,
     }
   end
@@ -67,7 +67,7 @@ local function node_to_line(node, opts)
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = opts.ui.highlight.data_marker,
+      group = 'MindDataMarker',
       width = #marker,
     }
   elseif node.url ~= nil then
@@ -75,7 +75,7 @@ local function node_to_line(node, opts)
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = opts.ui.highlight.url_marker,
+      group = 'MindURLMarker',
       width = #marker,
     }
   end
@@ -86,7 +86,7 @@ local function node_to_line(node, opts)
     name = name .. marker
 
     partial_hls[#partial_hls + 1] = {
-      group = opts.ui.highlight.select_marker,
+      group = 'MindSelectMarker',
       width = #marker,
     }
   end
@@ -118,7 +118,7 @@ local function render_node(node, indent, is_last, lines, hls, opts)
   local hl_line = #lines
 
   hls[#hls + 1] = {
-    group = opts.ui.highlight.open_marker,
+    group = 'MindOpenMarker',
     line = hl_line,
     col_start = 0,
     col_end = #line,
@@ -130,7 +130,7 @@ local function render_node(node, indent, is_last, lines, hls, opts)
       local hl_col_end = hl_col_start + #mark
 
       hls[#hls + 1] = {
-        group = opts.ui.highlight.open_marker,
+        group = 'MindOpenMarker',
         line = hl_line,
         col_start = hl_col_start,
         col_end = hl_col_end
@@ -160,7 +160,7 @@ local function render_node(node, indent, is_last, lines, hls, opts)
       local hl_col_end = hl_col_start + #mark
 
       hls[#hls + 1] = {
-        group = opts.ui.highlight.closed_marker,
+        group = 'MindClosedMarker',
         line = hl_line,
         col_start = hl_col_start,
         col_end = hl_col_end
@@ -171,7 +171,12 @@ local function render_node(node, indent, is_last, lines, hls, opts)
       for _, hl in ipairs(partial_hls) do
         hl_col_start = hl_col_end
         hl_col_end = hl_col_start + hl.width
-        hls[#hls + 1] = { group = hl.group, line = hl_line, col_start = hl_col_start, col_end = hl_col_end }
+        hls[#hls + 1] = {
+          group = hl.group,
+          line = hl_line,
+          col_start = hl_col_start,
+          col_end = hl_col_end
+        }
       end
     end
   else
