@@ -8,14 +8,20 @@ local path = require'plenary.path'
 -- Create a new random file in a given directory.
 --
 -- Return the path to the created file, expanded if required.
-M.new_data_file = function(dir, name, content, should_expand)
+M.new_data_file = function(dir, name, extension, content, should_expand)
   -- ensure the directory exists
   local dir_path = path:new(dir)
   if not dir_path:exists() then
     dir_path:mkdir({ parents = true })
   end
 
-  local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name
+  -- filter the name
+  name = name:gsub('[^%w-]', ' ')
+  name = name:gsub('%s+', '-')
+  name = name:gsub('^-', '')
+  name = name:gsub('-$', '')
+
+  local filename = vim.fn.strftime('%Y%m%d%H%M%S-') .. name .. extension
   local p = path:new(dir, filename)
   local file_path = (should_expand and p:expand()) or tostring(p)
 

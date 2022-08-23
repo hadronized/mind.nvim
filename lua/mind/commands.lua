@@ -116,7 +116,8 @@ M.open_data = function(tree, node, directory, opts)
 
     data = mind_data.new_data_file(
       directory,
-      node.contents[1].text .. opts.edit.data_extension,
+      node.contents[1].text,
+      opts.edit.data_extension,
       contents,
       should_expand
     )
