@@ -82,7 +82,7 @@ M.load_local_state = function()
   local local_mind = path:new(cwd, '.mind')
   if (local_mind:is_dir()) then
     -- we have a local mind; read the projects state from there
-    file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
+    local file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'r')
 
     if (file == nil) then
       notify('cannot open local Mind tree')
