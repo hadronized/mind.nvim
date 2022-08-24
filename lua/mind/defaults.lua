@@ -97,6 +97,18 @@ return {
       -- highlight used on the selection marker
       select_marker = 'Error',
     },
+
+    -- preset of icons
+    icon_preset = {
+      { ' ', 'Sub-project' },
+      { '', 'For when you have an idea' },
+      { ' ', 'Note taking?' },
+      { '陼', 'Task management' },
+      { ' ', 'Uncheck, empty square or backlog' },
+      { ' ', 'Full square or on-going' },
+      { ' ', 'Check or done' },
+      { ' ', 'Trash bin, deleted, cancelled, etc.' },
+    }
   },
 
   -- default keymaps; see 'mind.commands' for a list of commands that can be mapped to keys here
@@ -107,6 +119,7 @@ return {
       ['<tab>'] = 'toggle_node',
       ['<s-tab>'] = 'toggle_parent',
       ['/'] = 'select_path',
+      ['$'] = 'change_icon_menu',
       I = 'add_inside_start',
       i = 'add_inside_end',
       d = 'delete',
