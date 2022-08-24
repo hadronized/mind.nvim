@@ -651,14 +651,14 @@ Default:~
 
 Default:~
     icon_preset = {
-      { ' ', 'Sub-project' },
-      { '', 'For when you have an idea' },
-      { ' ', 'Note taking?' },
-      { '陼', 'Task management' },
-      { ' ', 'Uncheck, empty square or backlog' },
-      { ' ', 'Full square or on-going' },
-      { ' ', 'Check or done' },
-      { ' ', 'Trash bin, deleted, cancelled, etc.' },
+      { " ", "Sub-project" },
+      { " ", "For when you have an idea" },
+      { " ", "Note taking?" },
+      { "陼", "Task management" },
+      { " ", "Uncheck, empty square or backlog" },
+      { " ", "Full square or on-going" },
+      { " ", "Check or done" },
+      { " ", "Trash bin, deleted, cancelled, etc." },
     }
 
                                                       *mind-config-ui-highlight*

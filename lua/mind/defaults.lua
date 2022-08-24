@@ -102,7 +102,7 @@ return {
     icon_preset = {
       { ' ', 'Sub-project' },
       { ' ', 'Journal, newspaper, weekly and daily news' },
-      { '', 'For when you have an idea' },
+      { ' ', 'For when you have an idea' },
       { ' ', 'Note taking?' },
       { '陼', 'Task management' },
       { ' ', 'Uncheck, empty square or backlog' },
