@@ -71,6 +71,11 @@ M.commands = {
     return true
   end,
 
+  change_icon_menu = function(args)
+    M.change_icon_menu_cursor(args.tree, args.opts)
+    return true
+  end,
+
   select = function(args)
     M.toggle_select_node_cursor(args.tree, args.opts)
     return false
@@ -320,6 +325,44 @@ end
 M.change_icon_cursor = function(tree, opts)
   mind_ui.with_cursor(function(line)
     M.change_icon_line(tree, line, opts)
+  end)
+end
+
+-- Change the icon of a node by selecting through the list of preset icons.
+M.change_icon_menu = function(tree, node, opts)
+  local prompt = string.format('Pick an icon for %s', node.contents[1].text)
+  local format_item = function(item)
+    return string.format('%s: %s', item[1], item[2])
+  end
+
+  for _, s in ipairs(opts.ui.icon_preset) do
+    print(vim.inspect(s))
+  end
+  vim.ui.select(
+    opts.ui.icon_preset,
+    {
+      prompt = prompt,
+      format_item = format_item
+    },
+    function(item)
+      if item ~= nil then
+        node.icon = item[1]
+        mind_ui.render(tree, 0, opts)
+      end
+    end
+  )
+end
+
+-- Change the icon of the node at a given line through the list of preset icons.
+M.change_icon_menu_line = function(tree, line, opts)
+  local node = mind_node.get_node_by_line(tree, line)
+  M.change_icon_menu(tree, node, opts)
+end
+
+-- Change the icon of the node under the cursor through the list of preset icons.
+M.change_icon_menu_cursor = function(tree, opts)
+  mind_ui.with_cursor(function(line)
+    M.change_icon_menu_line(tree, line, opts)
   end)
 end
 

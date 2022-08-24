@@ -250,6 +250,13 @@ keys are documented here.
 `'change_icon'`                                         *mind-command-change_icon*
     Change the icon of the node under the cursor.
 
+`'change_icon_menu'`                                *mind-command-change_icon_menu*
+    Change the icon of the node under the cursor by using the icon menu.
+
+    The menu is triggered via |vim.ui.select| (ensure the plugin you use
+    correctly registers itself to |vim.ui.select|). The preset icons can be
+    set in the user configuration with |mind-config-ui.icon_preset|.
+
 `'select'`                                                   *mind-command-select*
     Select the node under the cursor.
 
@@ -636,6 +643,24 @@ Default:~
 Default:~
     `select_marker = ""`
 
+`ui.icon_preset`                                      *mind-config-ui.icon_preset*
+    Preset icons to use in |mind-command-change_icon_menu|.
+
+    It must be a table containing a table of two text: the first one being the
+    icon and the second one its textual description.
+
+Default:~
+    icon_preset = {
+      { ' ', 'Sub-project' },
+      { '', 'For when you have an idea' },
+      { ' ', 'Note taking?' },
+      { '陼', 'Task management' },
+      { ' ', 'Uncheck, empty square or backlog' },
+      { ' ', 'Full square or on-going' },
+      { ' ', 'Check or done' },
+      { ' ', 'Trash bin, deleted, cancelled, etc.' },
+    }
+
                                                       *mind-config-ui-highlight*
 The `ui.highlight` sub-section is used to change the highlighting mechanism of
 Mind. You can change them directly in your configuration file, or override
@@ -718,6 +743,7 @@ Default:~
       ["<tab>"] = "toggle_node",
       ["<s-tab>"] = "toggle_node",
       ["/"] = "select_path",
+      ["$"] = "change_icon_menu",
       I = "add_inside_start",
       i = "add_inside_end",
       d = "delete",
