@@ -246,6 +246,18 @@ keys are documented here.
     If the node doesn’t have data associated with, the function automatically
     creates the data file and opens it.
 
+`'open_data_index'`                                 *mind-command-open_data_index*
+    Open the data file of the node found by searching the index.
+
+`'copy_node_link'`                                   *mind-command-copy_node_link*
+    Copy the link of the node under the cursor.
+
+    The link is either the data file path if the node is a data node, or its
+    URL if its a URL node, and place the link in the unnamed register (|""|).
+
+`'copy_node_link_index'`                       *mind-command-copy_node_link_index*
+    Copy the link of a node found by searching the index.
+
 `'make_url'`                                               *mind-command-make_url*
     Turn the node under the cursor into a URL node.
 
@@ -634,6 +646,14 @@ Default:~
 Default:~
     `data_header = "# %s"`
 
+`edit.copy_link_format`                        *mind-config-edit.copy_link_format*
+    Format string when copying links.
+
+    The link of the node is inserted with `%s`.
+
+Default:~
+    copy_link_format = "[](%s)"
+
                                                               *mind-config-tree*
 The `tree` section groups configuration options about tree behaviors and
 setup.
@@ -817,6 +837,8 @@ Default:~
       c = "add_inside_end_index",
       I = "add_inside_start",
       i = "add_inside_end",
+      l = "copy_node_link",
+      L = "copy_node_link_index",
       d = "delete",
       O = "add_above",
       o = "add_below",

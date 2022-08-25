@@ -28,6 +28,9 @@ return {
 
     -- default header to put in newly created data files
     data_header = '# %s',
+
+    -- format string for copied links
+    copy_link_format = '[](%s)'
   },
 
   -- tree options
@@ -133,6 +136,8 @@ return {
       c = 'add_inside_end_index',
       I = 'add_inside_start',
       i = 'add_inside_end',
+      l = 'copy_node_link',
+      L = 'copy_node_link_index',
       d = 'delete',
       O = 'add_above',
       o = 'add_below',
