@@ -3,6 +3,7 @@
 local M = {}
 
 local mind_data = require'mind.data'
+local mind_indexing = require'mind.indexing'
 local mind_keymap = require'mind.keymap'
 local mind_node = require'mind.node'
 local mind_ui = require'mind.ui'
@@ -45,6 +46,11 @@ M.commands = {
     return true
   end,
 
+  add_inside_end_index = function(args)
+    M.create_node_index(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
+    return true
+  end,
+
   delete = function(args)
     M.delete_node_cursor(args.tree, args.opts)
     return true
@@ -59,6 +65,10 @@ M.commands = {
   open_data = function(args)
     M.open_data_cursor(args.tree, args.data_dir, args.opts)
     return true
+  end,
+
+  open_data_index = function(args)
+    M.open_data_index(args.tree, args.data_dir, args.opts)
   end,
 
   make_url = function(args)
@@ -180,6 +190,23 @@ M.open_data_cursor = function(tree, directory, opts)
   end)
 end
 
+-- Open the data file associated with the node in the index
+M.open_data_index = function(tree, directory, opts)
+  mind_indexing.search_index(
+    tree,
+    'Open data / URL',
+    -- filter function
+    function(node)
+      return opts.tree.automatic_creation or node.data ~= nil or node.url ~= nil
+    end,
+    -- sink function
+    function(item)
+      M.open_data(tree, item.node, directory, opts)
+    end,
+    opts
+  )
+end
+
 -- Turn a node into a URL node.
 --
 -- For this to work, the node must not have any data associated with it.
@@ -251,6 +278,24 @@ M.create_node_cursor = function(tree, dir, opts)
       M.create_node_line(tree, line, input, dir, opts)
     end)
   end)
+end
+
+-- Use the index to locate the node where to add anothere node in.
+M.create_node_index = function(tree, dir, opts)
+  mind_indexing.search_index(
+    tree,
+    'Pick a node to create a new node in',
+    -- filter function
+    nil,
+    -- sink function
+    function(item)
+      mind_ui.with_input('Node name: ', nil, function(input)
+        local node = mind_node.new_node(input)
+        M.create_node(tree, item.parent, item.node, node, dir, opts)
+      end)
+    end,
+    opts
+  )
 end
 
 -- Delete a node on a given line in the tree.

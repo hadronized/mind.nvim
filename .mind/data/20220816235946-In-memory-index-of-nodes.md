@@ -34,3 +34,5 @@ So, we can probably remove whitespaces and shit, and simply build from 2 to N se
 default.
 
 Once this is done, we will have a nice super fast index to lookup in.
+
+`strcharpart` can be used to slice and generate the N-graphs.
