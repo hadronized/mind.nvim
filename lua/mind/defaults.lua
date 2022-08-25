@@ -161,5 +161,8 @@ return {
       q = 'quit',
       x = 'select',
     },
+
+    -- set to false to disable the default keymaps
+    default_keymaps = true,
   }
 }

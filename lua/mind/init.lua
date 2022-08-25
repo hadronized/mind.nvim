@@ -49,7 +49,22 @@ local function create_user_commands()
 end
 
 M.setup = function(opts)
-  M.opts = vim.tbl_deep_extend('force', require'mind.defaults', opts or {})
+  local defaults = require'mind.defaults'
+  local default_keymaps = defaults.keymaps.default_keymaps
+  -- check if user explicitly set default_keymaps
+  if opts and opts.keymaps and opts.keymaps.default_keymaps ~= nil then
+    default_keymaps = opts.keymaps.default_keymaps
+  end
+  -- Only disable if user explicitly set default_keymaps to false
+  if default_keymaps then
+    -- use default maps extended with user maps
+    M.opts = vim.tbl_deep_extend('force', defaults, opts or {})
+  else
+    -- remove the default maps and extend with user maps
+    defaults.keymaps.normal = nil
+    defaults.keymaps.selection = nil
+    M.opts = vim.tbl_deep_extend('force', defaults, opts or {})
+  end
 
   -- ensure the paths are expanded
   mind_state.expand_opts_paths(M.opts)

@@ -68,23 +68,17 @@ M.insert_keymaps = function(bufnr, get_tree, data_dir, save_tree, opts)
   }
 
   for key, _ in pairs(keyset) do
-    vim.keymap.set('n', key, function()
-      local keymap = M.get_keymap()
-
-      if (keymap == nil) then
-        notify('no active keymap', vim.log.levels.WARN)
-        return
-      end
-
+    local keymap = M.get_keymap()
+    -- Don't overwrite users default mapping if they arent using the keymap
+    if keymap ~= nil then
+      -- cmd of 'nil' means don't set the keymap
       local cmd = keymap[key]
-
-      if (cmd == nil) then
-        notify('no command bound to ' .. tostring(key), vim.log.levels.WARN)
-        return
+      if cmd and cmd ~= 'nil' then
+        vim.keymap.set('n', key, function()
+          cmd(args)
+        end, { buffer = bufnr, noremap = true, silent = true })
       end
-
-      cmd(args)
-    end, { buffer = bufnr, noremap = true, silent = true })
+    end
   end
 end
 

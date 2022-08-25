@@ -834,6 +834,17 @@ For a given keymap, a table is associated for which the key are the actual key
 to press and the value are either a string representing the command name (see
 |mind-lua-api-commands-declarative|).
 
+To disable default keymaps set `keymaps.default_keymaps` to false. If you
+only want to disable a few keymaps set the key of the map to "nil" for the
+map in `keymaps.normal` or `keymaps.selection`. The quotes around nil are
+required.
+
+-- disable tab in normal mode
+normal = {
+    ["<tab>"] = "nil"
+}
+
+
 Default:~
     normal = {
       ["<cr>"] = "open_data",
@@ -868,6 +879,9 @@ Default:~
       q = "quit",
       x = "select",
     }
+
+    -- boolean, set to false to remove all default keymaps
+    default_keymaps = true, 
 
 ==============================================================================
 HIGHLIGHTS                                                     *mind-highlights*
