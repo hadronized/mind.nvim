@@ -112,6 +112,7 @@ return {
       { ' ', 'GitHub' },
       { ' ', 'Monitoring' },
       { ' ', 'Internet, Earth, everyone!' },
+      { ' ', 'Frozen, on-hold' },
     }
   },
 
