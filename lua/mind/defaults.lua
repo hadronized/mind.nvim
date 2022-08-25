@@ -112,6 +112,7 @@ return {
       { ' ', 'GitHub' },
       { ' ', 'Monitoring' },
       { ' ', 'Internet, Earth, everyone!' },
+      { ' ', 'Frozen, on-hold' },
     }
   },
 
@@ -120,10 +121,12 @@ return {
     -- keybindings when navigating the tree normally
     normal = {
       ['<cr>'] = 'open_data',
+      ['<s-cr>'] = 'open_data_index',
       ['<tab>'] = 'toggle_node',
       ['<s-tab>'] = 'toggle_parent',
       ['/'] = 'select_path',
       ['$'] = 'change_icon_menu',
+      c = 'add_inside_end_index',
       I = 'add_inside_start',
       i = 'add_inside_end',
       d = 'delete',

@@ -62,7 +62,7 @@ M.open_main = function()
       mind_commands.open_tree(
         args.tree,
         args.opts.persistence.data_dir,
-        mind_state.save_main_state,
+        function() mind_state.save_main_state(args.opts) end,
         args.opts
       )
 
@@ -81,7 +81,9 @@ M.open_project = function(use_global)
       mind_commands.open_tree(
         args.tree,
         args.data_dir,
-        use_global and mind_state.save_main_state or mind_state.save_local_state,
+        use_global
+          and function() mind_state.save_main_state(opts) end
+          or function() mind_state.save_local_state() end,
         args.opts
       )
 
@@ -107,13 +109,11 @@ M.wrap_main_tree_fn = function(f, opts)
   local args = {
     tree = mind_state.state.tree,
     data_dir = opts.persistence.data_dir,
-    opts = opts
+    save_tree = function() mind_state.save_main_state(opts) end,
+    opts = opts,
   }
 
-  local should_save = f(args)
-  if should_save then
-    mind_state.save_main_state(opts)
-  end
+  f(args)
 end
 
 -- Wrap a function call expecting a project tree.
@@ -155,20 +155,18 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     tree = mind_state.local_tree
   end
 
+  local save_tree =
+    use_global and function() mind_state.save_main_state(opts) end
+    or function() mind_state_local_state() end
+
   local args = {
     tree = tree,
     data_dir = mind_state.get_project_data_dir(opts),
+    save_tree = save_tree,
     opts = opts
   }
 
-  local should_save = f(args)
-  if should_save then
-    if use_global then
-      mind_state.save_main_state(opts)
-    else
-      mind_state.save_local_state()
-    end
-  end
+  f(args)
 end
 
 return M
