@@ -13,7 +13,7 @@ end
 
 local local_share = vim.env.XDG_DATA_HOME
 if local_share == nil then
-	local_share = "~/.local/share"
+  local_share = "~/.local/share"
 end
 
 return {
