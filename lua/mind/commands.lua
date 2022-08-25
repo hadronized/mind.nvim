@@ -183,7 +183,6 @@ end
 M.open_data_cursor = function(tree, directory, opts)
   mind_ui.with_cursor(function(line)
     M.open_data_line(tree, line, directory, opts)
-    mind_ui.render(tree, 0, opts)
   end)
 end
 
@@ -198,7 +197,6 @@ M.open_data_index = function(tree, directory, save_tree, opts)
     end,
     -- sink function
     function(item)
-      notify(string.format('opening data in %s', item.path))
       M.open_data(tree, item.node, directory, opts)
       save_tree()
     end,
