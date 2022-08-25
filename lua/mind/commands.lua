@@ -69,6 +69,14 @@ M.commands = {
     M.open_data_index(args.get_tree(), args.data_dir, args.save_tree, args.opts)
   end,
 
+  copy_node_link = function(args)
+    M.copy_node_link_cursor(args.get_tree(), nil, args.opts)
+  end,
+
+  copy_node_link_index = function(args)
+    M.copy_node_link_index(args.get_tree(), nil, args.opts)
+  end,
+
   make_url = function(args)
     M.make_url_node_cursor(args.get_tree(), args.opts)
     args.save_tree()
@@ -199,6 +207,51 @@ M.open_data_index = function(tree, directory, save_tree, opts)
     function(item)
       M.open_data(tree, item.node, directory, opts)
       save_tree()
+    end,
+    opts
+  )
+end
+
+-- Get the “link” of a node and put it in the provided register.
+--
+-- If the node is a data node, get the path of the associated data file.
+-- If the node is a URL node, get the URL.
+--
+-- If `reg` is omitted, the link is copied to the "" register.
+M.copy_node_link = function(node, reg, opts)
+  local link = node.data or node.url
+
+  if link ~= nil then
+    notify('link was copied')
+    vim.fn.setreg(reg or '"', string.format(opts.edit.copy_link_format or '%s', link))
+  end
+end
+
+-- Get the “link” of a node on the given line.
+M.copy_node_link_line = function(tree, line, reg, opts)
+  local node = mind_node.get_node_by_line(tree, line)
+  M.copy_node_link(node, reg, opts)
+end
+
+-- Get the “link” of a node under the cursor.
+M.copy_node_link_cursor = function(tree, reg, opts)
+  mind_ui.with_cursor(function(line)
+    M.copy_node_link_line(tree, line, reg, opts)
+  end)
+end
+
+-- Get the “link” of a node by doing an index search.
+M.copy_node_link_index = function(tree, reg, opts)
+  mind_indexing.search_index(
+    tree,
+    'Get a node link',
+    -- filter function
+    function(node)
+      return node.data ~= nil or node.url ~= nil
+    end,
+    -- sink function
+    function(item)
+      M.copy_node_link(item.node, reg, opts)
     end,
     opts
   )
