@@ -193,7 +193,7 @@ M.open_data_index = function(tree, directory, save_tree, opts)
     'Open data / URL',
     -- filter function
     function(node)
-      return opts.tree.automatic_creation or node.data ~= nil or node.url ~= nil
+      return opts.tree.automatic_data_creation or node.data ~= nil or node.url ~= nil
     end,
     -- sink function
     function(item)

@@ -1,4 +1,4 @@
-mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 22
+mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 25
 
 ==============================================================================
 CONTENTS                                                         *mind-contents*
@@ -105,6 +105,7 @@ unstable.
 
 `mind`          Entry point and main interface.
 `mind.commands` Available commands.
+`mind.indexing` Indexing feature, especially |mind.indexing.search_index|.
 `mind.keymap`   Keymap getter / setter and operations.
 `mind.node`     Node operations.
 `mind.ui`       Tree rendering and UI functions.
@@ -225,6 +226,10 @@ keys are documented here.
     Add a new node inside the node under the cursor, at the end of its
     children.
 
+`'add_inside_end_index'`                       *mind-command-add_inside_end_index*
+    Add a new node inside the node extracted via the index, at the end of its
+    children.
+
 `'delete'`                                                   *mind-command-delete*
     Delete the node under the cursor.
 
@@ -289,15 +294,55 @@ If you plan on writing your own command, you will have to understand the
 members of that {args} table:
 
 Members:~
-    {tree}     the tree the function must operate on.
-    {data_dir} the data directory the tree is affected to.
-    {opts}     the globar or overriden user options.
+    {get_tree}  a function taking no argument returning the tree the function
+                must operate on.
+    {data_dir}  the data directory the tree is affected to.
+    {save_tree} a function taking no argument to call if you want to persiste
+                the state of the tree .
+    {opts}      the globar or overriden user options.
 
 An important point about command functions is that you don’t have to rely on
-the provided comands (via |mind-lua-api-commands-declarative|). You can also
+the provided commands (via |mind-lua-api-commands-declarative|). You can also
 create your own commands. In order to do so, you need to create a function
 taking a table as described above — {args} — and set a keybinding for it. You
 can also directly invoke your command with a tree by using
+
+                                                         *mind-lua-api-indexing*
+Indexing API~
+
+The indexing is a powerful feature of Mind, allowing to perform operations one
+trees and nodes by looking them up in an indexed way. Even though the module
+provides several public symbols, you are only interested in a single one:
+|mind.indexing.search_index|.
+
+`mind.indexing.search_index(`                         *mind.indexing.search_index*
+  {tree}`,`
+  {prompt}`,`
+  {filter}`,`
+  {f}`,`
+  {opts}
+`)`
+    Search a node in {tree}, indexed.
+
+    This is a powerful function that allows to quickly locate a node by using
+    the |vim.ui.select| API. You can set the {prompt} as well as a {filter}.
+    The filter must be function taking a node and returning `true` or `false.`
+    Setting `nil` for {filter} is unfiltering.
+
+    {f} is expected to get the chosen `item`, which is a table containing the
+    following elements:
+
+    `path`: path to the node.
+    `parent`: parent node.
+    `node`: located node.
+
+Arguments:~
+    {tree}   the tree to index and search in.
+    {prompt} the index prompt.
+    {filter} a node filtering function to preclude nodes from appearing in the
+             index
+    {f}      the sink function receiving the picked item.
+    {opts}   user defined options.
 
                                                            *mind-lua-api-keymap*
 Keymap API~
@@ -486,11 +531,24 @@ UI API~
     This is a low-level function that you are unlikely to use, especially if
     you are writing a command function. If you are looking for a way to render
     your tree after you have performed some operations, you should have a look
-    at |mind.wrap_main_tree_fn| and |mind.wrap_project_tree_fn| options.
+    at |mind.wrap_main_tree_fn| and |mind.wrap_project_tree_fn| options along
+    with the |mind.ui.rerender| function.
+
+    This function updates the render cache to reuse {tree} and {bufnr} if
+    needed.
+
+`mind.ui.rerender(`{tree}`,` {opts}`)`                              *mind.ui.rerender*
+    Re-render {tree}.
+
+    That function allows to re-render the content of a tree if it’s displayed.
+    The way it works is by setting / updating a render cache when calling
+    |mind.ui.render| in the first place. When calling |mind.ui.rerender|, the
+    render cache is inspected to check whether {tree} is the same as the one
+    displayed in the cached `bufnr`. If that’s the case, the tree is rendered
+    again, otherwise nothing is done.
 
 Arguments:~
-    {tree}  the tree to render
-    {bufnr} the buffer to render into
+    {tree}  the tree to re-render
     {opts}  user-defined options.
 
 `mind.ui.with_cursor(`{f}`)`                                  *mind.ui.with_cursor*
@@ -591,6 +649,12 @@ setup.
 Default:~
     `automatic_creation = true`
 
+`tree.automatic_data_creation`          *mind-config-tree.automatic_data_creation*
+    Whether to automatically create and associate data files to nodes.
+
+Default:~
+    `automatic_data_creation = true`
+
                                                                 *mind-config-ui*
 The `ui` section is all about user interactivity and rendering.
 
@@ -652,6 +716,7 @@ Default:~
 Default:~
     icon_preset = {
       { " ", "Sub-project" },
+      { " ", "Journal, newspaper, weekly and daily news" },
       { " ", "For when you have an idea" },
       { " ", "Note taking?" },
       { "陼", "Task management" },
@@ -659,6 +724,10 @@ Default:~
       { " ", "Full square or on-going" },
       { " ", "Check or done" },
       { " ", "Trash bin, deleted, cancelled, etc." },
+      { " ", "GitHub" },
+      { " ", "Monitoring" },
+      { " ", "Internet, Earth, everyone!" },
+      { " ", "Frozen, on-hold" },
     }
 
                                                       *mind-config-ui-highlight*
@@ -740,10 +809,12 @@ to press and the value are either a string representing the command name (see
 Default:~
     normal = {
       ["<cr>"] = "open_data",
+      ["<s-cr>"] = "open_data_index",
       ["<tab>"] = "toggle_node",
       ["<s-tab>"] = "toggle_node",
       ["/"] = "select_path",
       ["$"] = "change_icon_menu",
+      c = "add_inside_end_index",
       I = "add_inside_start",
       i = "add_inside_end",
       d = "delete",
