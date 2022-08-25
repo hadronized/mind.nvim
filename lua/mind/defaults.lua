@@ -11,16 +11,20 @@ elseif sysname == 'Windows' then
   url_open = 'start ""'
 end
 
+local local_share = vim.env.XDG_DATA_HOME
+if local_share == nil then
+	local_share = "~/.local/share"
+end
+
 return {
   -- persistence, both for the tree state and data files
   persistence = {
     -- path where the global mind tree is stored
-    state_path = '~/.local/share/mind.nvim/mind.json',
+    state_path = local_share .. '/mind.nvim/mind.json',
 
     -- directory where to create global data files
-    data_dir = '~/.local/share/mind.nvim/data',
+    data_dir = local_share .. '/mind.nvim/data',
   },
-
   -- edit options
   edit = {
     -- file extension to use when creating a data file
