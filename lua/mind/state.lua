@@ -12,12 +12,27 @@ M.expand_opts_paths = function(opts)
   opts.persistence.data_dir = vim.fn.expand(opts.persistence.data_dir)
 end
 
+-- Get the main tree.
+M.get_main_tree = function()
+  return M.state.tree
+end
+
+-- Get a project tree.
+M.get_project_tree = function(cwd)
+  if cwd ~= nil then
+    return M.state.projects[cwd]
+  else
+    return M.local_tree
+  end
+end
+
 -- Load the main state.
 M.load_main_state = function(opts)
   -- Global state.
   M.state = {
     -- Main tree, used when no specific project is wanted.
     tree = {
+      uid = vim.fn.strftime('%Y%m%d%H%M%S'),
       contents = {
         { text = 'Main' },
       },
@@ -43,6 +58,13 @@ M.load_main_state = function(opts)
     if (encoded ~= nil) then
       M.state = vim.json.decode(encoded)
     end
+  end
+
+  -- ensure we have a UID
+  M.state.tree.uid = M.state.tree.uid or vim.fn.strftime('%Y%m%d%H%M%S')
+
+  for _, tree in ipairs(M.state.projects) do
+    tree.uid = tree.uid or vim.fn.strftime('%Y%m%d%H%M%S')
   end
 end
 
@@ -92,6 +114,10 @@ M.load_local_state = function()
 
       if (encoded ~= nil) then
         M.local_tree = vim.json.decode(encoded)
+
+        -- ensure we have a UID
+        M.local_tree.uid = M.local_tree.uid or vim.fn.strftime('%Y%m%d%H%M%S')
+
         M.local_cwd = cwd
       end
     end

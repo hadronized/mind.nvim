@@ -60,13 +60,11 @@ M.open_main = function()
   M.wrap_main_tree_fn(
     function(args)
       mind_commands.open_tree(
-        args.tree,
+        args.get_tree,
         args.opts.persistence.data_dir,
         function() mind_state.save_main_state(args.opts) end,
         args.opts
       )
-
-      return false
     end,
     M.opts
   )
@@ -79,15 +77,13 @@ M.open_project = function(use_global)
   M.wrap_project_tree_fn(
     function(args)
       mind_commands.open_tree(
-        args.tree,
+        args.get_tree,
         args.data_dir,
         use_global
           and function() mind_state.save_main_state(opts) end
           or function() mind_state.save_local_state() end,
         args.opts
       )
-
-      return false
     end,
     use_global,
     M.opts
@@ -107,7 +103,7 @@ M.wrap_main_tree_fn = function(f, opts)
   mind_state.load_main_state(opts)
 
   local args = {
-    tree = mind_state.state.tree,
+    get_tree = mind_state.get_main_tree,
     data_dir = opts.persistence.data_dir,
     save_tree = function() mind_state.save_main_state(opts) end,
     opts = opts,
@@ -123,12 +119,12 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
 
   local cwd = vim.fn.getcwd()
-  local tree
   if (use_global) then
-    tree = mind_state.state.projects[cwd]
+    local tree = mind_state.state.projects[cwd]
 
     if (tree == nil) then
       tree = {
+        uid = vim.fn.strftime('%Y%m%d%H%M%S'),
         contents = {
           { text = cwd:match('^.*/(.+)$') },
         },
@@ -144,6 +140,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     if mind_state.local_tree == nil then
       notify('creating a new local tree')
       mind_state.local_tree = {
+        uid = vim.fn.strftime('%Y%m%d%H%M%S'),
         contents = {
           { text = cwd:match('^.*/(.+)$') },
         },
@@ -151,16 +148,14 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
         icon = opts.ui.root_marker,
       }
     end
-
-    tree = mind_state.local_tree
   end
 
   local save_tree =
     use_global and function() mind_state.save_main_state(opts) end
-    or function() mind_state_local_state() end
+    or function() mind_state.save_local_state() end
 
   local args = {
-    tree = tree,
+    get_tree = function() return mind_state.get_project_tree(use_global and cwd or nil) end,
     data_dir = mind_state.get_project_data_dir(opts),
     save_tree = save_tree,
     opts = opts

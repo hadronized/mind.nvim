@@ -3,6 +3,15 @@ local M = {}
 
 local mind_node = require'mind.node'
 
+-- A per-tree render cache.
+--
+-- Once a tree is rendered in a buffer, it is added to that cache, so that operations that require an update of the tree
+-- can update the buffer, even if the cursor is in another buffer / window.
+--
+-- Opening a buffer will always replace that value. We also store the tree to ensure that updating another tree is
+-- authorized while a different tree is displayed (damn that’s powerful right?!).
+M.render_cache = {}
+
 -- Get the highlight group to use for a node given its status.
 local function node_hl(node)
   if (node.type == mind_node.TreeType.ROOT) then
@@ -199,12 +208,34 @@ local function render_tree(tree, opts)
   return lines, hls
 end
 
+-- Open a new window and return a handle to its buffer.
+M.open_window = function(opts)
+  local bufnr
+  if M.render_cache.bufnr ~= nil then
+    -- reuse if it’s currently displayed / not destroyed
+    bufnr = M.render_cache.bufnr
+  else
+    bufnr = vim.api.nvim_create_buf(false, false)
+    vim.api.nvim_buf_set_name(bufnr, 'mind')
+    vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
+    vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
+
+    -- window
+    vim.api.nvim_exec("vsp", false)
+    vim.api.nvim_exec("wincmd H", false)
+    vim.api.nvim_win_set_width(0, opts.ui.width)
+    vim.api.nvim_win_set_buf(0, bufnr)
+    vim.api.nvim_win_set_option(0, 'nu', false)
+  end
+
+  return bufnr
+end
+
 -- Render a tree into a buffer.
 M.render = function(tree, bufnr, opts)
   local lines, hls = render_tree(tree, opts)
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
-  vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
 
   -- set the lines for the whole buffer, replacing everything
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
@@ -215,6 +246,20 @@ M.render = function(tree, bufnr, opts)
   end
 
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
+
+  M.render_cache = { tree_uid = tree.uid, bufnr = bufnr }
+end
+
+-- Re-render a tree.
+--
+-- That function is almost similar to M.render, but it doesn’t expect a bufnr. Instead, it takes a tree that must be
+-- re-rendered, and if that tree is the same as the one in M.render_cache, then a render is performed again.
+--
+-- If the tree is different, no render is performed.
+M.rerender = function(tree, opts)
+  if M.render_cache.tree_uid ~= nil and tree.uid == M.render_cache.tree_uid then
+    M.render(tree, M.render_cache.bufnr, opts)
+  end
 end
 
 -- Run a command by passing it the cursor line.

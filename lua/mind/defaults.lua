@@ -34,6 +34,10 @@ return {
   tree = {
     -- automatically create nodes (when looking for paths for example)
     automatic_creation = true,
+
+    -- automatically create data file when trying to open one that doesn’t
+    -- have any data yet
+    automatic_data_creation = true,
   },
 
   -- UI options
