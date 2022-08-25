@@ -60,7 +60,12 @@ M.insert_keymaps = function(bufnr, tree, data_dir, save_tree, opts)
   end
 
   -- the input for the command function
-  local args = { tree = tree, data_dir = data_dir, opts = opts }
+  local args = {
+    tree = tree,
+    data_dir = data_dir,
+    save_tree = save_tree,
+    opts = opts
+  }
 
   for key, _ in pairs(keyset) do
     vim.keymap.set('n', key, function()
@@ -78,10 +83,7 @@ M.insert_keymaps = function(bufnr, tree, data_dir, save_tree, opts)
         return
       end
 
-      local should_save = cmd(args)
-      if should_save then
-        save_tree(opts)
-      end
+      cmd(args)
     end, { buffer = bufnr, noremap = true, silent = true })
   end
 end

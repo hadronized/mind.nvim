@@ -12,108 +12,105 @@ local notify = require'mind.notify'.notify
 M.commands = {
   toggle_node = function(args)
     M.toggle_node_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   toggle_parent = function(args)
     M.toggle_node_parent_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   quit = function(args)
     M.reset()
     M.close(args.tree, args.opts)
-    return false
   end,
 
   add_above = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
-    return true
+    args.save_tree()
   end,
 
   add_below = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
-    return true
+    args.save_tree()
   end,
 
   add_inside_start = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
-    return true
+    args.save_tree()
   end,
 
   add_inside_end = function(args)
     M.create_node_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
-    return true
+    args.save_tree()
   end,
 
   add_inside_end_index = function(args)
     M.create_node_index(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
-    return true
+    args.save_tree()
   end,
 
   delete = function(args)
     M.delete_node_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   rename = function(args)
     M.rename_node_cursor(args.tree, args.opts)
     M.reset()
-    return true
+    args.save_tree()
   end,
 
   open_data = function(args)
     M.open_data_cursor(args.tree, args.data_dir, args.opts)
-    return true
+    args.save_tree()
   end,
 
   open_data_index = function(args)
-    M.open_data_index(args.tree, args.data_dir, args.opts)
+    M.open_data_index(args.tree, args.data_dir, args.save_tree, args.opts)
   end,
 
   make_url = function(args)
     M.make_url_node_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   change_icon = function(args)
     M.change_icon_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   change_icon_menu = function(args)
     M.change_icon_menu_cursor(args.tree, args.opts)
-    return true
+    args.save_tree()
   end,
 
   select = function(args)
     M.toggle_select_node_cursor(args.tree, args.opts)
-    return false
   end,
 
   select_path = function(args)
     M.select_node_path(args.tree, args.opts)
-    return false
   end,
 
   move_above = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.ABOVE, args.opts)
-    return true
+    args.save_tree()
   end,
 
   move_below = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.BELOW, args.opts)
-    return true
+    args.save_tree()
   end,
 
   move_inside_start = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_START, args.opts)
-    return true
+    args.save_tree()
   end,
 
   move_inside_end = function(args)
     M.move_node_selected_cursor(args.tree, mind_node.MoveDir.INSIDE_END, args.opts)
-    return true
+    args.save_tree()
   end,
 }
 
@@ -144,7 +141,6 @@ M.open_data = function(tree, node, directory, opts)
     end
 
     node.data = data
-    mind_ui.render(tree, 0, opts)
   end
 
   -- list all the visible windows and filter the one that have a nofile (likely to be the mind, but it could also be
@@ -187,11 +183,12 @@ end
 M.open_data_cursor = function(tree, directory, opts)
   mind_ui.with_cursor(function(line)
     M.open_data_line(tree, line, directory, opts)
+    mind_ui.render(tree, 0, opts)
   end)
 end
 
 -- Open the data file associated with the node in the index
-M.open_data_index = function(tree, directory, opts)
+M.open_data_index = function(tree, directory, save_tree, opts)
   mind_indexing.search_index(
     tree,
     'Open data / URL',
@@ -201,7 +198,9 @@ M.open_data_index = function(tree, directory, opts)
     end,
     -- sink function
     function(item)
+      notify(string.format('opening data in %s', item.path))
       M.open_data(tree, item.node, directory, opts)
+      save_tree()
     end,
     opts
   )
@@ -218,7 +217,6 @@ M.make_url_node = function(tree, node, opts)
 
   mind_ui.with_input('URL: ', 'https://', function(input)
     node.url = input
-    mind_ui.render(tree, 0, opts)
   end)
 end
 
@@ -232,6 +230,7 @@ end
 M.make_url_node_cursor = function(tree, opts)
   mind_ui.with_cursor(function(line)
     M.make_url_node_line(tree, line, opts)
+    mind_ui.render(tree, 0, opts)
   end)
 end
 
@@ -253,8 +252,6 @@ M.create_node = function(tree, grand_parent, parent, node, dir, opts)
     notify('forbidden node creation', vim.log.levels.WARN)
     return
   end
-
-  mind_ui.render(tree, 0, opts)
 end
 
 -- Add a node as child of another node on the given line.
@@ -276,6 +273,7 @@ M.create_node_cursor = function(tree, dir, opts)
   mind_ui.with_cursor(function(line)
     mind_ui.with_input('Node name: ', nil, function(input)
       M.create_node_line(tree, line, input, dir, opts)
+      mind_ui.render(tree, 0, opts)
     end)
   end)
 end
