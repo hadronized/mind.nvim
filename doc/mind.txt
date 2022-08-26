@@ -95,6 +95,10 @@ customize how those commands work, have a look at |mind.setup|.
 
     See |mind.reload_state| for further information.
 
+`:MindClose`                                                          *:MindClose*
+    Close project or main mind tree if open. Resets ui cache.
+
+    See |mind.close| for further information.
                                                                   *mind-lua-api*
 Lua API~
 
@@ -123,6 +127,10 @@ Main API~
 
 Arguments:~
     {opts} List of options. See the |mind-config| section.
+
+`mind.close(``)`                                                        *mind.close*
+    Close project or main mind tree if open using the
+    mind.ui.render_cache.bufnr. Resets ui cache.
 
 `mind.open_main()`                                                *mind.open_main*
     Open the main tree.
