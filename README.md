@@ -113,8 +113,8 @@ similar for other package managers.
 ```lua
 use {
   'phaazon/mind.nvim',
-  branch = 'v2'
-  requires = { 'nvim-lua/plenary.nvim' }
+  branch = 'v2',
+  requires = { 'nvim-lua/plenary.nvim' },
   configure = function()
     require'mind'.setup()
   end
