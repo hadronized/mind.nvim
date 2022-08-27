@@ -23,6 +23,7 @@ as [org-mode] or even standalone applications, like [Notion], and add new and in
 * [Motivation](#motivation)
 * [Features](#features)
 * [Getting started](#getting-started)
+  * [Prerequisites](#prerequisites)
   * [Installation](#installation)
     * [Important note about versioning](#important-note-about-versioning)
     * [Nightly users](#nightly-users)
@@ -95,19 +96,32 @@ Besides that, **Mind** allows you to manipulate trees and nodes. Feature set:
 
 This section will guide you through the list of steps you must take to be able to get started with **Mind**.
 
-This plugin was written against Neovim 0.8, which is currently a nightly version. This plugin _might_ not work:
 
-- With a version of Neovim before 0.8.
+## Prerequisites
+
+This plugin was written against Neovim 0.7.2, so you need to ensure you are running **Neovim 0.7.2 or higher**.
+
+Lua dependencies:
+
+- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim), which can be required with `'nvim-lua/plenary.nvim'`.
 
 ## Installation
 
-Add this to your Lua code:
+This installation guide uses [packer.nvim](https://github.com/wbthomason/packer.nvim) but the procedure should be quite
+similar for other package managers.
 
 ```lua
-require'mind'.setup()
+use {
+  'phaazon/mind.nvim',
+  branch = 'v2'
+  requires = { 'nvim-lua/plenary.nvim' }
+  configure = function()
+    require'mind'.setup()
+  end
+}
 ```
 
-To get a default experience. Feel free to customize later the `setup` invocation (`:h mind.setup`).
+This will bring you a default experience. Feel free to customize later the `setup` invocation (`:h mind.setup`).
 
 ### Important note about versioning
 
