@@ -52,7 +52,7 @@ M.load_main_state = function(opts)
   local file = io.open(opts.persistence.state_path, 'r')
 
   if (file ~= nil) then
-    local encoded = file:read()
+    local encoded = file:read('*a')
     file:close()
 
     if (encoded ~= nil) then
@@ -109,7 +109,7 @@ M.load_local_state = function()
     if (file == nil) then
       notify('cannot open local Mind tree')
     else
-      local encoded = file:read()
+      local encoded = file:read('*a')
       file:close()
 
       if (encoded ~= nil) then
