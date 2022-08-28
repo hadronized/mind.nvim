@@ -29,7 +29,7 @@ local function create_user_commands()
 
   vim.api.nvim_create_user_command(
     'MindReloadState',
-    function(opts)
+    function()
       require'mind'.reload_state()
     end,
     {
@@ -80,7 +80,7 @@ M.open_project = function(use_global)
         args.get_tree,
         args.data_dir,
         use_global
-          and function() mind_state.save_main_state(opts) end
+          and function() mind_state.save_main_state(args.opts) end
           or function() mind_state.save_local_state() end,
         args.opts
       )

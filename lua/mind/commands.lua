@@ -20,10 +20,9 @@ M.commands = {
     args.save_tree()
   end,
 
-  quit = function(args)
-    local tree = args.get_tree()
-    M.unselect_node(tree)
-    M.close(tree, args.opts)
+  quit = function()
+    M.unselect_node()
+    M.close()
   end,
 
   add_above = function(args)
@@ -260,7 +259,7 @@ end
 -- Turn a node into a URL node.
 --
 -- For this to work, the node must not have any data associated with it.
-M.make_url_node = function(tree, node, opts)
+M.make_url_node = function(node)
   if node.data ~= nil then
     notify('cannot create URL node: data present', vim.log.levels.ERROR)
     return
@@ -272,15 +271,15 @@ M.make_url_node = function(tree, node, opts)
 end
 
 -- Turn the node on the given line a URL node.
-M.make_url_node_line = function(tree, line, opts)
+M.make_url_node_line = function(tree, line)
   local node = mind_node.get_node_by_line(tree, line)
-  M.make_url_node(tree, node, opts)
+  M.make_url_node(node)
 end
 
 -- Turn the node under the cursor a URL node.
 M.make_url_node_cursor = function(tree, opts)
   mind_ui.with_cursor(function(line)
-    M.make_url_node_line(tree, line, opts)
+    M.make_url_node_line(tree, line)
     mind_ui.rerender(tree, opts)
   end)
 end
@@ -382,7 +381,7 @@ end
 M.rename_node = function(tree, node, opts)
   mind_ui.with_input('Rename node: ', node.contents[1].text, function(input)
     node.contents[1].text = input
-    M.unselect_node(tree)
+    M.unselect_node()
     mind_ui.rerender(tree, opts)
   end)
 end
@@ -463,7 +462,7 @@ end
 -- Select a node.
 M.select_node = function(tree, parent, node, opts)
   -- ensure we unselect anything that would be currently selected
-  M.unselect_node(tree, opts)
+  M.unselect_node()
 
   node.is_selected = true
   M.selected = { parent = parent, node = node }
@@ -494,7 +493,7 @@ M.select_node_path = function(tree, opts)
 end
 
 -- Unselect any selected node in the tree.
-M.unselect_node = function(tree)
+M.unselect_node = function()
   if (M.selected ~= nil) then
     M.selected.node.is_selected = nil
     M.selected = nil
@@ -512,10 +511,10 @@ M.toggle_select_node_cursor = function(tree, opts)
     if (M.selected ~= nil) then
       local node = mind_node.get_node_by_line(tree, line)
       if (node == M.selected.node) then
-        M.unselect_node(tree, opts)
+        M.unselect_node()
         mind_ui.rerender(tree, opts)
       else
-        M.unselect_node(tree, opts)
+        M.unselect_node()
         M.select_node_line(tree, line, opts)
       end
     else
@@ -563,7 +562,7 @@ M.move_node = function(
 
     if (target_i == nil or source_i == nil) then
       -- trying to move inside itsefl; abort
-      M.unselect_node(tree, opts)
+      M.unselect_node()
       mind_ui.rerender(tree, opts)
       return
     end
@@ -571,7 +570,7 @@ M.move_node = function(
     if (target_i == source_i) then
       -- same node; aborting
       notify('not moving; source and target are the same node')
-      M.unselect_node(tree, opts)
+      M.unselect_node()
       mind_ui.rerender(tree, opts)
       return
     end
@@ -613,7 +612,7 @@ M.move_node = function(
     end
   end
 
-  M.unselect_node(tree, opts)
+  M.unselect_node()
   mind_ui.rerender(tree, opts)
 end
 
@@ -621,7 +620,7 @@ end
 M.move_node_selected_line = function(tree, line, dir, opts)
   if (M.selected == nil) then
     notify('cannot move; no selected node', vim.log.levels.ERROR)
-    M.unselect_node(tree, opts)
+    M.unselect_node()
     mind_ui.rerender(tree, opts)
     return
   end
@@ -630,7 +629,7 @@ M.move_node_selected_line = function(tree, line, dir, opts)
 
   if (parent == nil) then
     notify('cannot move root', vim.log.levels.ERROR)
-    M.unselect_node(tree, opts)
+    M.unselect_node()
     mind_ui.rerender(tree, opts)
     return
   end
@@ -696,8 +695,8 @@ M.open_tree = function(get_tree, data_dir, save_tree, opts)
 end
 
 -- Close the tree.
-M.close = function(tree, opts)
-  M.unselect_node(tree, opts)
+M.close = function()
+  M.unselect_node()
   mind_ui.render_cache = {}
   vim.api.nvim_buf_delete(0, { force = true })
 end
