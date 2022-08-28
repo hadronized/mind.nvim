@@ -115,7 +115,7 @@ use {
   'phaazon/mind.nvim',
   branch = 'v2',
   requires = { 'nvim-lua/plenary.nvim' },
-  configure = function()
+  config = function()
     require'mind'.setup()
   end
 }
