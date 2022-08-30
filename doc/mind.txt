@@ -175,7 +175,7 @@ Arguments:~
     {render} whether to render the tree again after the function has finished.
     {opts}   user-defined options.
 
-`mind.wrap_project_tree_fn(`                              *mind.wrap_main_tree_fn*
+`mind.wrap_project_tree_fn(`                              *mind.wrap_project_tree_fn*
   {f}`,`
   {global}`,`
   {render}`,`
