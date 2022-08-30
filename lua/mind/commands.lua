@@ -87,8 +87,7 @@ M.commands = {
   end,
 
   change_icon_menu = function(args)
-    M.change_icon_menu_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.change_icon_menu_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   select = function(args)
@@ -425,7 +424,7 @@ M.change_icon_cursor = function(tree, opts)
 end
 
 -- Change the icon of a node by selecting through the list of preset icons.
-M.change_icon_menu = function(tree, node, opts)
+M.change_icon_menu = function(tree, node, save_tree, opts)
   local prompt = string.format('Pick an icon for %s', node.contents[1].text)
   local format_item = function(item)
     return string.format('%s: %s', item[1], item[2])
@@ -440,6 +439,7 @@ M.change_icon_menu = function(tree, node, opts)
     function(item)
       if item ~= nil then
         node.icon = item[1]
+        save_tree()
         mind_ui.rerender(tree, opts)
       end
     end
@@ -447,15 +447,15 @@ M.change_icon_menu = function(tree, node, opts)
 end
 
 -- Change the icon of the node at a given line through the list of preset icons.
-M.change_icon_menu_line = function(tree, line, opts)
+M.change_icon_menu_line = function(tree, line, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.change_icon_menu(tree, node, opts)
+  M.change_icon_menu(tree, node, save_tree, opts)
 end
 
 -- Change the icon of the node under the cursor through the list of preset icons.
-M.change_icon_menu_cursor = function(tree, opts)
+M.change_icon_menu_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.change_icon_menu_line(tree, line, opts)
+    M.change_icon_menu_line(tree, line, save_tree, opts)
   end)
 end
 
