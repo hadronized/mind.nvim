@@ -36,6 +36,16 @@ local function create_user_commands()
       desc = 'Reload Mind internal state',
     }
   )
+
+  vim.api.nvim_create_user_command(
+    'MindClose',
+    function(opts)
+      require'mind'.close()
+    end,
+    {
+      desc = 'Close main or project Mind tree if open',
+    }
+  )
 end
 
 M.setup = function(opts)
@@ -53,6 +63,11 @@ M.setup = function(opts)
 
   -- highlights
   mind_highlight.create_highlight_groups(M.opts)
+end
+
+-- Close the main or project tree if open.
+M.close = function()
+  mind_commands.close()
 end
 
 -- Open the main tree.

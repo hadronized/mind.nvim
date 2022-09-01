@@ -697,8 +697,12 @@ end
 -- Close the tree.
 M.close = function()
   M.unselect_node()
+  -- close the buffer if open
+  if mind_ui.render_cache and mind_ui.render_cache.bufnr then
+    vim.api.nvim_buf_delete(mind_ui.render_cache.bufnr, { force = true })
+  end
+  -- reset the cache
   mind_ui.render_cache = {}
-  vim.api.nvim_buf_delete(0, { force = true })
 end
 
 -- Precompute commands.
