@@ -1,4 +1,4 @@
-mind.txt*    For Neovim version 0.8                   Last change: 2022 Aug 25
+mind.txt*    For Neovim version 0.7.2                   Last change: 2022 Aug 31
 
 ==============================================================================
 CONTENTS                                                         *mind-contents*
@@ -44,8 +44,8 @@ Non-exhaustive feature set:
 ==============================================================================
 REQUIREMENTS                                                 *mind-requirements*
 
-Mind works only with Neovim and was written with Neovim-0.8, so it is highly
-recommended to use Neovim version 0.8+.
+Mind works only with Neovim and was written with Neovim-0.7.2, so it is highly
+recommended to use Neovim version 0.7.2+.
 
 ==============================================================================
 USAGE                                                               *mind-usage*
