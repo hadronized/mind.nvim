@@ -687,6 +687,20 @@ M.open_tree = function(get_tree, data_dir, save_tree, opts)
   -- window
   local bufnr = mind_ui.open_window(opts)
 
+  -- ensure that we close the tree if the window gets closed
+  local id
+  id = vim.api.nvim_create_autocmd(
+    { 'WinClosed' },
+    {
+      buffer = bufnr,
+      callback = function()
+        notify('Mind deleted!')
+        vim.api.nvim_del_autocmd(id)
+        M.close()
+      end
+    }
+  )
+
   -- tree
   mind_ui.render(get_tree(), bufnr, opts)
 
@@ -697,10 +711,12 @@ end
 -- Close the tree.
 M.close = function()
   M.unselect_node()
+
   -- close the buffer if open
   if mind_ui.render_cache and mind_ui.render_cache.bufnr then
     vim.api.nvim_buf_delete(mind_ui.render_cache.bufnr, { force = true })
   end
+
   -- reset the cache
   mind_ui.render_cache = {}
 end
