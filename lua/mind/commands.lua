@@ -694,7 +694,6 @@ M.open_tree = function(get_tree, data_dir, save_tree, opts)
     {
       buffer = bufnr,
       callback = function()
-        notify('Mind deleted!')
         vim.api.nvim_del_autocmd(id)
         M.close()
       end
