@@ -184,7 +184,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
 
   local args = {
     get_tree = function() return mind_state.get_project_tree(use_global and cwd or nil) end,
-    data_dir = mind_state.get_project_data_dir(opts),
+    data_dir = mind_state.get_project_data_dir(use_global, opts),
     save_tree = save_tree,
     opts = opts
   }
@@ -196,6 +196,8 @@ end
 --
 -- If a local tree exists, wrap the local tree. Otherwise, wrap a global tree.
 M.wrap_smart_project_tree_fn = function(f, opts)
+  opts = vim.tbl_deep_extend('force', M.opts, opts or {})
+
   local cwd = vim.fn.getcwd()
   local p = path:new(cwd, '.mind')
 
@@ -219,6 +221,7 @@ M.wrap_smart_project_tree_fn = function(f, opts)
       -- a global project tree exists, use that
       get_tree = function() return mind_state.get_project_tree(cwd) end
       save_tree = function() mind_state.save_main_state(opts) end
+      use_global = true
     else
       -- prompt the user whether they want a global or local tree
       mind_ui.with_input('What kind of project tree? (local/global) ', 'local', function(input)
@@ -226,15 +229,15 @@ M.wrap_smart_project_tree_fn = function(f, opts)
           mind_state.new_local_tree(cwd, opts)
           get_tree = function() return mind_state.get_project_tree() end
           save_tree = function() mind_state.save_local_state() end
+          use_global = false
         elseif input == 'global' then
           mind_state.new_global_project_tree(cwd, opts)
           get_tree = function() return mind_state.get_project_tree(cwd) end
           save_tree = function() mind_state.save_main_state(opts) end
+          use_global = true
         end
       end)
     end
-
-    use_global = true
   end
 
   if get_tree == nil then
@@ -244,10 +247,12 @@ M.wrap_smart_project_tree_fn = function(f, opts)
 
   local args = {
     get_tree = get_tree,
-    data_dir = mind_state.get_project_data_dir(opts),
+    data_dir = mind_state.get_project_data_dir(use_global, opts),
     save_tree = save_tree,
     opts = opts,
   }
+
+  print('smart data', args.data_dir)
 
   f(args, use_global)
 end

@@ -203,14 +203,12 @@ M.save_state = function(opts)
 end
 
 -- Get the project data directory.
---
--- If a local tree exists, its path data is returned. Otherwise, we use the one in opts.persistence.data_dir.
-M.get_project_data_dir = function(opts)
-  if M.local_tree ~= nil then
-    return '.mind/data'
+M.get_project_data_dir = function(use_global, opts)
+  if use_global then
+    return opts.persistence.data_dir
   end
 
-  return opts.persistence.data_dir
+  return '.mind/data'
 end
 
 return M
