@@ -1,4 +1,4 @@
-mind.txt*    For Neovim version 0.7.2                   Last change: 2022 Aug 31
+mind.txt*    For Neovim version 0.7.2                 Last change: 2022 Sep 04
 
 ==============================================================================
 CONTENTS                                                         *mind-contents*
@@ -90,6 +90,13 @@ customize how those commands work, have a look at |mind.setup|.
 
     See |mind.open_project| for further information.
 
+`:MindOpenSmartProject`                                         *:MindOpenProject*
+    Open the project tree, either local, global or prompt the user for which
+    kind of project tree to create.
+
+    See |mind.open_smart_project| for further information.
+
+
 `:MindReloadState`                                              *:MindReloadState*
     Reload Mind state for global and local trees.
 
@@ -173,23 +180,41 @@ Arguments:~
     and edit trees in both, you might want to use that command to synchronize
     the changes in the other Neovim instances.
 
-`mind.wrap_main_tree_fn(`{f}`,` {render}`,` {opts}`)`           *mind.wrap_main_tree_fn*
+`mind.wrap_main_tree_fn(`{f}`,` {opts}`)`                     *mind.wrap_main_tree_fn*
     Wrap a command function with the main Mind tree.
 
     See |mind-lua-api-commands-functions| for how to write such functions.
 
 Arguments:~
     {f}      the command function to execute.
-    {render} whether to render the tree again after the function has finished.
     {opts}   user-defined options.
 
 `mind.wrap_project_tree_fn(`                           *mind.wrap_project_tree_fn*
   {f}`,`
-  {global}`,`
+  {use_global}`,`
   {render}`,`
   {opts}
 `)
-    Wrap a command function with the main Mind tree.
+    Wrap a command function with a project Mind tree.
+
+    See |mind-lua-api-commands-functions| for how to write such functions.
+
+Arguments:~
+    {f}          the command function to execute.
+    {use_global} `true` for a global project true, `false` or `nil`
+                 otherwise.
+    {opts}       user-defined options.
+
+`mind.wrap_smart_project_tree_fn(`               *mind.wrap_smart_project_tree_fn*
+  {f}`,`
+  {opts}
+`)
+    Wrap a command function with either the main project Mind tree, or a local
+    one. The decision on which tree to open is as follows:
+
+    1. If a local project tree exists, use it.
+    2. Otherwise, if a global project tree exists, use it.
+    3. If no tree exists, prompt the user for which kind of tree to create.
 
     See |mind-lua-api-commands-functions| for how to write such functions.
 

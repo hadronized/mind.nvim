@@ -26,6 +26,38 @@ M.get_project_tree = function(cwd)
   end
 end
 
+M.new_global_project_tree = function(cwd, opts)
+  notify('creating a new global project tree')
+
+  local tree = {
+    uid = vim.fn.strftime('%Y%m%d%H%M%S'),
+    contents = {
+      { text = cwd:match('^.*/(.+)$') },
+    },
+    type = mind_node.TreeType.ROOT,
+    icon = opts.ui.root_marker,
+  }
+
+  M.state.projects[cwd] = tree
+
+  return tree
+end
+
+M.new_local_tree = function(cwd, opts)
+  notify('creating a new local tree')
+
+  M.local_tree = {
+    uid = vim.fn.strftime('%Y%m%d%H%M%S'),
+    contents = {
+      { text = cwd:match('^.*/(.+)$') },
+    },
+    type = mind_node.TreeType.LOCAL_ROOT,
+    icon = opts.ui.root_marker,
+  }
+
+  return M.local_tree
+end
+
 -- Load the main state.
 M.load_main_state = function(opts)
   -- Global state.

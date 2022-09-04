@@ -3,7 +3,9 @@ local mind_highlight = require'mind.highlight'
 local mind_keymap = require'mind.keymap'
 local mind_node = require'mind.node'
 local mind_state = require'mind.state'
+local mind_ui = require'mind.ui'
 local notify = require'mind.notify'.notify
+local path = require'plenary.path'
 
 local M = {}
 
@@ -23,6 +25,16 @@ local function create_user_commands()
     end,
     {
       nargs = '?',
+      desc = 'Open the project Mind tree',
+    }
+  )
+
+  vim.api.nvim_create_user_command(
+    'MindOpenSmartProject',
+    function()
+      require'mind'.open_smart_project()
+    end,
+    {
       desc = 'Open the project Mind tree',
     }
   )
@@ -105,6 +117,23 @@ M.open_project = function(use_global)
   )
 end
 
+-- Open a smart project tree.
+M.open_smart_project = function()
+  M.wrap_smart_project_tree_fn(
+    function(args, use_global)
+      mind_commands.open_tree(
+        args.get_tree,
+        args.data_dir,
+        use_global
+          and function() mind_state.save_main_state(args.opts) end
+          or function() mind_state.save_local_state() end,
+        args.opts
+      )
+    end,
+    M.opts
+  )
+end
+
 -- Load state.
 M.reload_state = function()
   mind_state.load_state(M.opts)
@@ -137,33 +166,15 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   if use_global then
     mind_state.load_main_state(opts)
 
-    local tree = mind_state.state.projects[cwd]
-
-    if tree == nil then
-      tree = {
-        uid = vim.fn.strftime('%Y%m%d%H%M%S'),
-        contents = {
-          { text = cwd:match('^.*/(.+)$') },
-        },
-        type = mind_node.TreeType.ROOT,
-        icon = opts.ui.root_marker,
-      }
-      mind_state.state.projects[cwd] = tree
+    if mind_state.state.projects[cwd]== nil then
+      mind_state.new_global_project_tree(cwd, opts)
     end
   else
     -- load the local state
     mind_state.load_local_state()
 
     if mind_state.local_tree == nil then
-      notify('creating a new local tree')
-      mind_state.local_tree = {
-        uid = vim.fn.strftime('%Y%m%d%H%M%S'),
-        contents = {
-          { text = cwd:match('^.*/(.+)$') },
-        },
-        type = mind_node.TreeType.LOCAL_ROOT,
-        icon = opts.ui.root_marker,
-      }
+      mind_state.new_local_tree(cwd, opts)
     end
   end
 
@@ -179,6 +190,66 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   }
 
   f(args)
+end
+
+-- Smart project tree wrap.
+--
+-- If a local tree exists, wrap the local tree. Otherwise, wrap a global tree.
+M.wrap_smart_project_tree_fn = function(f, opts)
+  local cwd = vim.fn.getcwd()
+  local p = path:new(cwd, '.mind')
+
+  local get_tree
+  local save_tree
+  local use_global
+
+  if p:exists() and p:is_dir() then
+    -- load the local state
+    mind_state.load_local_state()
+
+    get_tree = function() return mind_state.get_project_tree() end
+    save_tree = function() mind_state.save_local_state() end
+    use_global = false
+  else
+    -- otherwise, try to open a global project
+    mind_state.load_main_state(opts)
+
+    local tree = mind_state.state.projects[cwd]
+    if tree ~= nil then
+      -- a global project tree exists, use that
+      get_tree = function() return mind_state.get_project_tree(cwd) end
+      save_tree = function() mind_state.save_main_state(opts) end
+    else
+      -- prompt the user whether they want a global or local tree
+      mind_ui.with_input('What kind of project tree? (local/global) ', 'local', function(input)
+        if input == 'local' then
+          mind_state.new_local_tree(cwd, opts)
+          get_tree = function() return mind_state.get_project_tree() end
+          save_tree = function() mind_state.save_local_state() end
+        elseif input == 'global' then
+          mind_state.new_global_project_tree(cwd, opts)
+          get_tree = function() return mind_state.get_project_tree(cwd) end
+          save_tree = function() mind_state.save_main_state(opts) end
+        end
+      end)
+    end
+
+    use_global = true
+  end
+
+  if get_tree == nil then
+    notify('unrecognized project tree type, aborting', vim.log.levels.WARN)
+    return
+  end
+
+  local args = {
+    get_tree = get_tree,
+    data_dir = mind_state.get_project_data_dir(opts),
+    save_tree = save_tree,
+    opts = opts,
+  }
+
+  f(args, use_global)
 end
 
 return M
