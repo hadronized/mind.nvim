@@ -134,10 +134,12 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   opts = vim.tbl_deep_extend('force', M.opts, opts or {})
 
   local cwd = vim.fn.getcwd()
-  if (use_global) then
+  if use_global then
+    mind_state.load_main_state(opts)
+
     local tree = mind_state.state.projects[cwd]
 
-    if (tree == nil) then
+    if tree == nil then
       tree = {
         uid = vim.fn.strftime('%Y%m%d%H%M%S'),
         contents = {
