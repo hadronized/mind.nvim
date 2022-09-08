@@ -99,7 +99,7 @@ return {
       url_marker = 'Label',
 
       -- highlight used on empty nodes (i.e. no children and no data)
-      modifier_empty = 'CursorLineNr',
+      modifier_empty = 'Grey',
 
       -- highlight used on the selection marker
       select_marker = 'Error',
