@@ -77,7 +77,7 @@ M.load_main_state = function(opts)
   }
 
   if (opts.persistence.state_path == nil) then
-    notify('cannot load shit', vim.log.levels.ERROR)
+    notify('cannot load file with persistent state', vim.log.levels.ERROR)
     return
   end
 
