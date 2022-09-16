@@ -201,7 +201,7 @@ M.save_local_state = function()
       local file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
 
       if (file == nil) then
-        notify(string.format('cannot save local project at %s', cwd), 4)
+        notify(string.format('cannot save local project at %s', cwd), vim.log.levels.ERROR)
       else
         local encoded = vim.json.encode(M.local_tree)
         file:write(encoded)
