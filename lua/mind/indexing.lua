@@ -1,13 +1,17 @@
--- Indexing capabilities.
---
--- This module contains the code used to index a tree by path, allowing to search and locate nodes quickly.
-
+---Indexing capabilities.
+---
+---This module contains the code used to index a tree by path, allowing to search and locate nodes quickly.
 local M = {}
 
--- The index is a simple map between paths and nodes.
+---The index is a simple map between paths and nodes.
 M.index = {}
 
--- Index a node and its children
+---Build an index(`M.index`) by recursively traversing the `node`
+---@param parent_path string
+---@param parent table
+---@param node table
+---@param filter nil|fun(node: table): boolean
+---@param opts table
 M.index_node = function(parent_path, parent, node, filter, opts)
   local path = string.format('%s%s', parent_path, node.type and '/' or node.contents[1].text)
 
@@ -23,13 +27,21 @@ M.index_node = function(parent_path, parent, node, filter, opts)
   end
 end
 
--- Index a whole tree.
+---Build an index(`M.index`) by recursively traversing the whole tree.
+---@param tree table
+---@param filter nil|fun(node: table): boolean
+---@param opts table
 M.index_tree = function(tree, filter, opts)
   M.index = {}
   M.index_node('', nil, tree, filter, opts)
 end
 
--- Search through the index.
+---Search through the index.
+---@param tree table
+---@param prompt string
+---@param filter nil|fun(node: table): boolean
+---@param f any
+---@param opts any
 M.search_index = function(tree, prompt, filter, f, opts)
   local format_item = function(item)
     return item.path
