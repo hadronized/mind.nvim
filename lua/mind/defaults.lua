@@ -138,6 +138,7 @@ return {
       i = 'add_inside_end',
       l = 'copy_node_link',
       L = 'copy_node_link_index',
+      y = 'copy_node_data',
       d = 'delete',
       O = 'add_above',
       o = 'add_below',

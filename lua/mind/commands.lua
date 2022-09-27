@@ -76,6 +76,10 @@ M.commands = {
     M.copy_node_link_index(args.get_tree(), nil, args.opts)
   end,
 
+  copy_node_data = function(args)
+    M.copy_node_data_cursor(args.get_tree(), nil, args.opts)
+  end,
+
   make_url = function(args)
     M.make_url_node_cursor(args.get_tree(), args.opts)
     args.save_tree()
@@ -253,6 +257,40 @@ M.copy_node_link_index = function(tree, reg, opts)
     end,
     opts
   )
+end
+
+M.copy_node_data = function(node, reg, opts)
+  if (node == nil) then
+    notify('cannot open data; no node', vim.log.levels.ERROR)
+    return
+  end
+
+  if (node.data == nil) or node.url then
+   notify('cannot copy data; no data', vim.log.levels.ERROR) 
+   return
+  end
+
+  local file = io.open(node.data, "rb")
+  if (file == nil) then
+   notify('cannot copy data; failed to open data file', vim.log.levels.ERROR) 
+   return
+  end
+
+  local content = file:read("*all")
+  file:close()
+
+  vim.fn.setreg(reg or '"', string.format(opts.edit.copy_node_data_format or '%s', content))
+end
+
+M.copy_node_data_line = function(tree, line, reg, opts)
+  local node = mind_node.get_node_by_line(tree, line)
+  M.copy_node_data(node, reg, opts)
+end
+
+M.copy_node_data_cursor = function(tree, reg, opts)
+  mind_ui.with_cursor(function(line)
+    M.copy_node_data_line(tree, line, reg, opts)
+  end)
 end
 
 -- Turn a node into a URL node.
