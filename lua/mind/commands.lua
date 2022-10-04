@@ -77,8 +77,7 @@ M.commands = {
   end,
 
   make_url = function(args)
-    M.make_url_node_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.make_url_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   change_icon = function(args)
@@ -258,7 +257,7 @@ end
 -- Turn a node into a URL node.
 --
 -- For this to work, the node must not have any data associated with it.
-M.make_url_node = function(node)
+M.make_url_node = function(tree, node, save_tree, opts)
   if node.data ~= nil then
     notify('cannot create URL node: data present', vim.log.levels.ERROR)
     return
@@ -266,20 +265,21 @@ M.make_url_node = function(node)
 
   mind_ui.with_input('URL: ', 'https://', function(input)
     node.url = input
+    save_tree()
+    mind_ui.rerender(tree, opts)
   end)
 end
 
 -- Turn the node on the given line a URL node.
-M.make_url_node_line = function(tree, line)
+M.make_url_node_line = function(tree, line, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.make_url_node(node)
+  M.make_url_node(tree, node, save_tree, opts)
 end
 
 -- Turn the node under the cursor a URL node.
-M.make_url_node_cursor = function(tree, opts)
+M.make_url_node_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.make_url_node_line(tree, line)
-    mind_ui.rerender(tree, opts)
+    M.make_url_node_line(tree, line, save_tree, opts)
   end)
 end
 
