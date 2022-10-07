@@ -252,8 +252,6 @@ M.wrap_smart_project_tree_fn = function(f, opts)
     opts = opts,
   }
 
-  print('smart data', args.data_dir)
-
   f(args, use_global)
 end
 

@@ -216,7 +216,6 @@ M.open_window = function(opts)
     bufnr = M.render_cache.bufnr
   else
     bufnr = vim.api.nvim_create_buf(false, false)
-    vim.api.nvim_buf_set_name(bufnr, 'mind')
     vim.api.nvim_buf_set_option(bufnr, 'filetype', 'mind')
     vim.api.nvim_buf_set_option(bufnr, 'buftype', 'nofile')
 
