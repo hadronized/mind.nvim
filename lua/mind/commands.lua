@@ -651,7 +651,7 @@ M.toggle_node = function(tree, node, save_tree, opts)
 end
 
 -- Toggle (expand / collapse) a node at a given line.
-M.toggle_node_line = function(tree, line, opts)
+M.toggle_node_line = function(tree, line, save_tree,opts)
   local node = mind_node.get_node_by_line(tree, line)
   M.toggle_node(tree, node, save_tree, opts)
 end
