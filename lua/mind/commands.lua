@@ -26,22 +26,22 @@ M.commands = {
   end,
 
   add_above = function(args)
-    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.ABOVE, args.opts)
+    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.ABOVE, args.save_tree, args.opts)
     args.save_tree()
   end,
 
   add_below = function(args)
-    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.BELOW, args.opts)
+    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.BELOW, args.save_tree, args.opts)
     args.save_tree()
   end,
 
   add_inside_start = function(args)
-    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_START, args.opts)
+    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_START, args.save_tree, args.opts)
     args.save_tree()
   end,
 
   add_inside_end = function(args)
-    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_END, args.opts)
+    M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_END, args.save_tree, args.opts)
     args.save_tree()
   end,
 
@@ -306,7 +306,7 @@ M.create_node = function(tree, grand_parent, parent, node, dir, opts)
 end
 
 -- Add a node as child of another node on the given line.
-M.create_node_line = function(tree, line, name, dir, opts)
+M.create_node_line = function(tree, line, name, dir, save_tree, opts)
   local grand_parent, parent = mind_node.get_node_and_parent_by_line(tree, line)
 
   if (parent == nil) then
@@ -317,13 +317,14 @@ M.create_node_line = function(tree, line, name, dir, opts)
   local node = mind_node.new_node(name, nil)
 
   M.create_node(tree, grand_parent, parent, node, dir, opts)
+  save_tree()
 end
 
 -- Ask the user for input and the node in the tree at the given direction.
-M.create_node_cursor = function(tree, dir, opts)
+M.create_node_cursor = function(tree, dir, save_tree, opts)
   mind_ui.with_cursor(function(line)
     mind_ui.with_input('Node name: ', nil, function(input)
-      M.create_node_line(tree, line, input, dir, opts)
+      M.create_node_line(tree, line, input, dir, save_tree, opts)
     end)
   end)
 end
