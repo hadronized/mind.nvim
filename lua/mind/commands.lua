@@ -11,13 +11,11 @@ local notify = require'mind.notify'.notify
 
 M.commands = {
   toggle_node = function(args)
-    M.toggle_node_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.toggle_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   toggle_parent = function(args)
-    M.toggle_node_parent_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.toggle_node_parent_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   quit = function()
@@ -27,22 +25,18 @@ M.commands = {
 
   add_above = function(args)
     M.create_node_cursor(args.get_tree(), mind_node.MoveDir.ABOVE, args.save_tree, args.opts)
-    args.save_tree()
   end,
 
   add_below = function(args)
     M.create_node_cursor(args.get_tree(), mind_node.MoveDir.BELOW, args.save_tree, args.opts)
-    args.save_tree()
   end,
 
   add_inside_start = function(args)
     M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_START, args.save_tree, args.opts)
-    args.save_tree()
   end,
 
   add_inside_end = function(args)
     M.create_node_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_END, args.save_tree, args.opts)
-    args.save_tree()
   end,
 
   add_inside_end_index = function(args)
@@ -50,18 +44,15 @@ M.commands = {
   end,
 
   delete = function(args)
-    M.delete_node_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.delete_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   rename = function(args)
-    M.rename_node_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.rename_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   open_data = function(args)
-    M.open_data_cursor(args.get_tree(), args.data_dir, args.opts)
-    args.save_tree()
+    M.open_data_cursor(args.get_tree(), args.data_dir, args.save_tree, args.opts)
   end,
 
   open_data_index = function(args)
@@ -81,8 +72,7 @@ M.commands = {
   end,
 
   change_icon = function(args)
-    M.change_icon_cursor(args.get_tree(), args.opts)
-    args.save_tree()
+    M.change_icon_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
   change_icon_menu = function(args)
@@ -98,30 +88,26 @@ M.commands = {
   end,
 
   move_above = function(args)
-    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.ABOVE, args.opts)
-    args.save_tree()
+    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.ABOVE, args.save_tree, args.opts)
   end,
 
   move_below = function(args)
-    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.BELOW, args.opts)
-    args.save_tree()
+    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.BELOW, args.save_tree, args.opts)
   end,
 
   move_inside_start = function(args)
-    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_START, args.opts)
-    args.save_tree()
+    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_START, args.save_tree, args.opts)
   end,
 
   move_inside_end = function(args)
-    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_END, args.opts)
-    args.save_tree()
+    M.move_node_selected_cursor(args.get_tree(), mind_node.MoveDir.INSIDE_END, args.save_tree, args.opts)
   end,
 }
 
 -- Open the data file associated with a node.
 --
 -- If it doesn’t exist, create it first.
-M.open_data = function(tree, node, directory, opts)
+M.open_data = function(tree, node, directory, save_tree, opts)
   if node.url then
     vim.fn.system(string.format('%s "%s"', opts.ui.url_open, node.url))
     return
@@ -146,6 +132,7 @@ M.open_data = function(tree, node, directory, opts)
 
     node.data = data
     mind_ui.rerender(tree, opts)
+    save_tree()
   end
 
   -- list all the visible windows and filter the one that have a nofile (likely to be the mind, but it could also be
@@ -173,7 +160,7 @@ end
 -- Open the data file associated with a node for the given line.
 --
 -- If it doesn’t exist, create it first.
-M.open_data_line = function(tree, line, directory, opts)
+M.open_data_line = function(tree, line, directory, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
 
   if (node == nil) then
@@ -181,13 +168,13 @@ M.open_data_line = function(tree, line, directory, opts)
     return
   end
 
-  M.open_data(tree, node, directory, opts)
+  M.open_data(tree, node, directory, save_tree, opts)
 end
 
 -- Open the data file associated with the node under the cursor.
-M.open_data_cursor = function(tree, directory, opts)
+M.open_data_cursor = function(tree, directory, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.open_data_line(tree, line, directory, opts)
+    M.open_data_line(tree, line, directory, save_tree, opts)
   end)
 end
 
@@ -202,8 +189,7 @@ M.open_data_index = function(tree, directory, save_tree, opts)
     end,
     -- sink function
     function(item)
-      M.open_data(tree, item.node, directory, opts)
-      save_tree()
+      M.open_data(tree, item.node, directory, save_tree, opts)
     end,
     opts
   )
@@ -349,7 +335,7 @@ M.create_node_index = function(tree, dir, save_tree, opts)
 end
 
 -- Delete a node on a given line in the tree.
-M.delete_node_line = function(tree, line, opts)
+M.delete_node_line = function(tree, line, save_tree, opts)
   local parent, node = mind_node.get_node_and_parent_by_line(tree, line)
 
   if (node == nil) then
@@ -367,40 +353,42 @@ M.delete_node_line = function(tree, line, opts)
   mind_ui.with_confirmation(string.format("Delete '%s'?", node.contents[1].text), function()
     mind_node.delete_node(parent, index)
     mind_ui.rerender(tree, opts)
+    save_tree()
   end)
 end
 
 -- Delete the node under the cursor.
-M.delete_node_cursor = function(tree, opts)
+M.delete_node_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.delete_node_line(tree, line, opts)
+    M.delete_node_line(tree, line, save_tree, opts)
   end)
 end
 
 -- Rename a node.
-M.rename_node = function(tree, node, opts)
+M.rename_node = function(tree, node, save_tree, opts)
   mind_ui.with_input('Rename node: ', node.contents[1].text, function(input)
     node.contents[1].text = input
     M.unselect_node()
     mind_ui.rerender(tree, opts)
+    save_tree()
   end)
 end
 
 -- Rename a node at a given line.
-M.rename_node_line = function(tree, line, opts)
+M.rename_node_line = function(tree, line, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.rename_node(tree, node, opts)
+  M.rename_node(tree, node, save_tree, opts)
 end
 
 -- Rename the node under the cursor.
-M.rename_node_cursor = function(tree, opts)
+M.rename_node_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.rename_node_line(tree, line, opts)
+    M.rename_node_line(tree, line, save_tree, opts)
   end)
 end
 
 -- Change the icon of a node.
-M.change_icon = function(tree, node, opts)
+M.change_icon = function(tree, node, save_tree, opts)
   mind_ui.with_input('Change icon: ', node.icon, function(input)
     if input == ' ' then
       input = nil
@@ -408,19 +396,20 @@ M.change_icon = function(tree, node, opts)
 
     node.icon = input
     mind_ui.rerender(tree, opts)
+    save_tree()
   end)
 end
 
 -- Change the icon of the node at a given line.
-M.change_icon_line = function(tree, line, opts)
+M.change_icon_line = function(tree, line, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.change_icon(tree, node, opts)
+  M.change_icon(tree, node, save_tree, opts)
 end
 
 -- Change the icon of the node under the cursor.
-M.change_icon_cursor = function(tree, opts)
+M.change_icon_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.change_icon_line(tree, line, opts)
+    M.change_icon_line(tree, line, save_tree, opts)
   end)
 end
 
@@ -618,11 +607,12 @@ M.move_node = function(
 end
 
 -- Move a selected node into a node at the given line.
-M.move_node_selected_line = function(tree, line, dir, opts)
+M.move_node_selected_line = function(tree, line, dir, save_tree, opts)
   if (M.selected == nil) then
     notify('cannot move; no selected node', vim.log.levels.ERROR)
     M.unselect_node()
     mind_ui.rerender(tree, opts)
+    save_tree()
     return
   end
 
@@ -647,38 +637,39 @@ M.move_node_selected_line = function(tree, line, dir, opts)
 end
 
 -- Move a selected node into the node under the cursor.
-M.move_node_selected_cursor = function(tree, dir, opts)
+M.move_node_selected_cursor = function(tree, dir, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.move_node_selected_line(tree, line, dir, opts)
+    M.move_node_selected_line(tree, line, dir, save_tree, opts)
   end)
 end
 
 -- Toggle (expand / collapse) a node.
-M.toggle_node = function(tree, node, opts)
+M.toggle_node = function(tree, node, save_tree, opts)
   node.is_expanded = not node.is_expanded
   mind_ui.rerender(tree, opts)
+  save_tree()
 end
 
 -- Toggle (expand / collapse) a node at a given line.
 M.toggle_node_line = function(tree, line, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.toggle_node(tree, node, opts)
+  M.toggle_node(tree, node, save_tree, opts)
 end
 
 -- Toggle (expand / collapse) the node under the cursor.
-M.toggle_node_cursor = function(tree, opts)
+M.toggle_node_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
-    M.toggle_node_line(tree, line, opts)
+    M.toggle_node_line(tree, line, save_tree, opts)
   end)
 end
 
 -- Toggle (expand / collapse) the node’s parent under the cursor, if any.
-M.toggle_node_parent_cursor = function(tree, opts)
+M.toggle_node_parent_cursor = function(tree, save_tree, opts)
   mind_ui.with_cursor(function(line)
     local parent, _ = mind_node.get_node_and_parent_by_line(tree, line)
 
     if parent ~= nil then
-      M.toggle_node(tree, parent, opts)
+      M.toggle_node(tree, parent, save_tree, opts)
     end
   end)
 end
