@@ -225,6 +225,12 @@ M.open_window = function(opts)
     vim.api.nvim_win_set_width(0, opts.ui.width)
     vim.api.nvim_win_set_buf(0, bufnr)
     vim.api.nvim_win_set_option(0, 'nu', false)
+
+    local winhl_groups = table.concat(vim.tbl_map(function (group_name)
+      return group_name .. ':' .. opts.ui.window[group_name]
+    end, vim.tbl_keys(opts.ui.window)), ',')
+    vim.opt_local.winhighlight = winhl_groups
+
   end
 
   return bufnr

@@ -105,6 +105,19 @@ return {
       select_marker = 'Error',
     },
 
+    -- highlight window options
+    window = {
+      Normal = 'Normal',
+      NormalNC = 'NormalNC',
+      EndOfBuffer = 'EndOfBuffer',
+      CursorLine = 'CursorLine',
+      CursorLineNr = 'CursorLineNr',
+      StatusLine = 'StatusLine',
+      StatusLineNC = 'StatusLineNC',
+      SignColumn = 'SignColumn',
+      WinSeparator = 'WinSeparator'
+    },
+
     -- preset of icons
     icon_preset = {
       { ' ', 'Sub-project' },

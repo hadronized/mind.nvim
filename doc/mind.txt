@@ -849,6 +849,24 @@ Default:~
 Default:~
     `select_marker = "Error"`
 
+                                                           *mind-config-ui-window*
+The `ui.window` sub-section is used to change the highlight group of window
+Mind. You can change them directly in your configuration file, or override
+them in a colorscheme, for instance.
+
+Default:~
+    window = {
+      Normal = 'Normal',
+      NormalNC = 'NormalNC',
+      EndOfBuffer = 'EndOfBuffer',
+      CursorLine = 'CursorLine',
+      CursorLineNr = 'CursorLineNr',
+      StatusLine = 'StatusLine',
+      StatusLineNC = 'StatusLineNC',
+      SignColumn = 'SignColumn',
+      WinSeparator = 'WinSeparator'
+    }
+
                                                            *mind-config-keymaps*
 The `keymaps` sub-section is used to set keybindings for keymaps while
 interacting with a tree. It has two sub-section: `keymaps.normal` for every
