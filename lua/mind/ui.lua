@@ -1,7 +1,7 @@
 -- Everything relating to the UI.
 local M = {}
 
-local mind_node = require'mind.node'
+local mind_node = require 'mind.node'
 
 -- A per-tree render cache.
 --
@@ -225,6 +225,7 @@ M.open_window = function(opts)
     vim.api.nvim_win_set_width(0, opts.ui.width)
     vim.api.nvim_win_set_buf(0, bufnr)
     vim.api.nvim_win_set_option(0, 'nu', false)
+    vim.api.nvim_win_set_option(0, 'rnu', false)
   end
 
   return bufnr
