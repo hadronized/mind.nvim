@@ -90,7 +90,7 @@ customize how those commands work, have a look at |mind.setup|.
 
     See |mind.open_project| for further information.
 
-`:MindOpenSmartProject`                                         *:MindOpenProject*
+`:MindOpenSmartProject`                                    *:MindOpenSmartProject*
     Open the project tree, either local, global or prompt the user for which
     kind of project tree to create.
 
