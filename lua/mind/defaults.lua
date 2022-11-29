@@ -93,13 +93,13 @@ return {
       local_marker = 'Comment',
 
       -- highlight used on the data marker
-      data_marker = 'Grey',
+      data_marker = 'Comment',
 
       -- highlight used on the url marker
-      url_marker = 'Label',
+      url_marker = 'Comment',
 
       -- highlight used on empty nodes (i.e. no children and no data)
-      modifier_empty = 'Grey',
+      modifier_empty = 'Comment',
 
       -- highlight used on the selection marker
       select_marker = 'Error',
