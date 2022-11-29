@@ -40,7 +40,7 @@ return {
 
     -- automatically create data file when trying to open one that doesn’t
     -- have any data yet
-    automatic_data_creation = true,
+    automatic_data_creation = false,
   },
 
   -- UI options
