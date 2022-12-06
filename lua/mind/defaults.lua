@@ -64,7 +64,7 @@ return {
     local_marker = 'local',
 
     -- marker used to show that a node has an associated data file
-    data_marker = '',
+    data_marker = ' ',
 
     -- marker used to show that a node has an URL
     url_marker = ' ',
