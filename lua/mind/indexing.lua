@@ -35,9 +35,9 @@ M.search_index = function(tree, prompt, filter, f, opts)
     local prefix = ''
 
     if item.node.data ~= nil then
-      prefix = opts.ui.data_marker .. ' '
+      prefix = opts.ui.data_marker
     elseif item.node.url ~= nil then
-      prefix = opts.ui.url_marker .. ' '
+      prefix = opts.ui.url_marker
     end
 
     return prefix .. item.path
