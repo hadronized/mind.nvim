@@ -32,7 +32,15 @@ end
 -- Search through the index.
 M.search_index = function(tree, prompt, filter, f, opts)
   local format_item = function(item)
-    return item.path
+    local prefix = ''
+
+    if item.node.data ~= nil then
+      prefix = opts.ui.data_marker .. ' '
+    elseif item.node.url ~= nil then
+      prefix = opts.ui.url_marker .. ' '
+    end
+
+    return prefix .. item.path
   end
 
   M.index_tree(tree, filter, opts)
