@@ -1,7 +1,7 @@
 -- Everything relating to the UI.
 local M = {}
 
-local mind_node = require 'mind.node'
+local mind_node = require'mind.node'
 
 -- A per-tree render cache.
 --
