@@ -225,6 +225,7 @@ M.open_window = function(opts)
     vim.api.nvim_win_set_width(0, opts.ui.width)
     vim.api.nvim_win_set_buf(0, bufnr)
     vim.api.nvim_win_set_option(0, 'nu', false)
+    vim.api.nvim_win_set_option(0, 'rnu', false)
   end
 
   return bufnr
