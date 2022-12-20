@@ -139,6 +139,7 @@ return {
       l = 'copy_node_link',
       L = 'copy_node_link_index',
       d = 'delete',
+      D = 'delete_file',
       O = 'add_above',
       o = 'add_below',
       q = 'quit',
