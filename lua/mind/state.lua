@@ -1,23 +1,26 @@
+---Module responsible for managing state.
 local M = {}
 
 local path = require'plenary.path'
 local notify = require'mind.notify'.notify
 local mind_node = require'mind.node'
 
--- Expand opts paths.
---
--- They might contain relative symbols that need to be expanded (.., ~, etc.).
+---Expand `opts` paths by mutating the table.
+---
+---They might contain relative symbols that need to be expanded (.., ~, etc.).
 M.expand_opts_paths = function(opts)
   opts.persistence.state_path = vim.fn.expand(opts.persistence.state_path)
   opts.persistence.data_dir = vim.fn.expand(opts.persistence.data_dir)
 end
 
--- Get the main tree.
+---Get the main tree.
+---@return table
 M.get_main_tree = function()
   return M.state.tree
 end
 
--- Get a project tree.
+---Get a project tree.
+---@return table
 M.get_project_tree = function(cwd)
   if cwd ~= nil then
     return M.state.projects[cwd]
@@ -26,6 +29,10 @@ M.get_project_tree = function(cwd)
   end
 end
 
+---Create a global project tree.
+---@param cwd string
+---@param opts table
+---@return table
 M.new_global_project_tree = function(cwd, opts)
   notify('creating a new global project tree')
 
@@ -43,6 +50,10 @@ M.new_global_project_tree = function(cwd, opts)
   return tree
 end
 
+---Create a local tree.
+---@param cwd string
+---@param opts table
+---@return table
 M.new_local_tree = function(cwd, opts)
   notify('creating a new local tree')
 
@@ -58,7 +69,10 @@ M.new_local_tree = function(cwd, opts)
   return M.local_tree
 end
 
--- Load the main state.
+---Loads the main state.
+---
+---Read json from `opts.persistence.state_path`, decode, and overwrite `M.state`.
+---@param opts table
 M.load_main_state = function(opts)
   -- Global state.
   M.state = {
@@ -77,7 +91,7 @@ M.load_main_state = function(opts)
   }
 
   if (opts.persistence.state_path == nil) then
-    notify('cannot load shit', vim.log.levels.ERROR)
+    notify('cannot load file with persistent state', vim.log.levels.ERROR)
     return
   end
 
@@ -100,7 +114,10 @@ M.load_main_state = function(opts)
   end
 end
 
--- Save the main state.
+---Save the main state.
+---
+---Transform `M.state` into json, write it into `opts.persistence.state_path`.
+---@param opts table
 M.save_main_state = function(opts)
   if (opts.persistence.state_path == nil) then
     return
@@ -127,7 +144,9 @@ M.save_main_state = function(opts)
   end
 end
 
--- Load the local state.
+---Load the local state.
+---
+---Read json from .mind/state.json in the cwd, decode it, mutate `M.local_tree` and `M.local_cwd`.
 M.load_local_state = function()
   -- Local tree, for local projects.
   M.local_tree = nil
@@ -156,7 +175,9 @@ M.load_local_state = function()
   end
 end
 
--- Save the local state.
+---Save the local state.
+---
+---Transform `M.local_tree` into json, write it into .mind/state.json in the cwd.
 M.save_local_state = function()
   if M.local_tree ~= nil then
     local cwd = vim.fn.getcwd()
@@ -180,7 +201,7 @@ M.save_local_state = function()
       local file = io.open(path:new(cwd, '.mind', 'state.json'):expand(), 'w')
 
       if (file == nil) then
-        notify(string.format('cannot save local project at %s', cwd), 4)
+        notify(string.format('cannot save local project at %s', cwd), vim.log.levels.ERROR)
       else
         local encoded = vim.json.encode(M.local_tree)
         file:write(encoded)
@@ -190,19 +211,22 @@ M.save_local_state = function()
   end
 end
 
--- Load the full state (i.e. main and projects).
+---Load both main and local states.
 M.load_state = function(opts)
   M.load_main_state(opts)
   M.load_local_state()
 end
 
--- Save the full state.
+---Save both main and local states.
 M.save_state = function(opts)
   M.save_main_state(opts)
   M.save_local_state()
 end
 
--- Get the project data directory.
+---When `use_global` is `true`, get global data directory and `".mind/data"` otherwise
+---@param use_global boolean
+---@param opts table
+---@return string
 M.get_project_data_dir = function(use_global, opts)
   if use_global then
     return opts.persistence.data_dir

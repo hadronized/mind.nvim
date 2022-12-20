@@ -1,13 +1,16 @@
--- Data files.
-
+---Data files.
 local M = {}
 
 local notify = require'mind.notify'.notify
 local path = require'plenary.path'
 
--- Create a new random file in a given directory.
---
--- Return the path to the created file, expanded if required.
+---Create a new file in the given directory.
+---@param dir string
+---@param name string
+---@param extension string
+---@param content string
+---@param should_expand boolean
+---@return string the path to the created file, expanded if required.
 M.new_data_file = function(dir, name, extension, content, should_expand)
   -- ensure the directory exists
   local dir_path = path:new(dir)

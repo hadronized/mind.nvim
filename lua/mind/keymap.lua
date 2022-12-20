@@ -1,5 +1,4 @@
--- Keymaps and keybindings.
-
+---Keymaps and keybindings.
 local M = {}
 
 local notify = require'mind.notify'.notify
@@ -31,23 +30,31 @@ M.keymaps = {
   selection = {},
 }
 
--- Initialize keymaps.
+---Initialize keymaps by adding them from `opts.keymaps.{normal,selection}`.
 M.init_keymaps = function(opts)
   M.keymaps.normal = opts.keymaps.normal
   M.keymaps.selection = opts.keymaps.selection
 end
 
--- Set the currently active keymap.
+---@alias selector "normal" | "selection"
+---Set the currently active keymap selector.
+---@param selector selector
 M.set_keymap = function(selector)
   M.keymaps.selector = selector
 end
 
--- Get the currently active keymap.
+---Get the currently active keymap table.
+---@return table
 M.get_keymap = function()
   return M.keymaps[M.keymaps.selector]
 end
 
--- Insert keymaps into the given buffer.
+---Set keymaps for the given buffer.
+---@param bufnr number
+---@param get_tree fun(): table
+---@param data_dir string
+---@param save_tree fun()
+---@param opts table
 M.insert_keymaps = function(bufnr, get_tree, data_dir, save_tree, opts)
   local keyset = {}
 
