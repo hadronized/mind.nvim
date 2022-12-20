@@ -266,6 +266,9 @@ keys are documented here.
 `'delete'`                                                   *mind-command-delete*
     Delete the node under the cursor.
 
+`'delete_file'`                                         *mind-command-delete_file*
+    Delete the file associated with the node under the cursor.
+
 `'rename'`                                                   *mind-command-rename*
     Rename the node under the cursor.
 
@@ -873,6 +876,7 @@ Default:~
       l = "copy_node_link",
       L = "copy_node_link_index",
       d = "delete",
+      D = "delete_file",
       O = "add_above",
       o = "add_below",
       q = "quit",
