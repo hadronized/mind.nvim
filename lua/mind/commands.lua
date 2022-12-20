@@ -47,6 +47,10 @@ M.commands = {
     M.delete_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
 
+  delete_file = function(args)
+    M.delete_data_cursor(args.get_tree(), args.save_tree, args.opts)
+  end,
+
   rename = function(args)
     M.rename_node_cursor(args.get_tree(), args.save_tree, args.opts)
   end,
@@ -157,6 +161,25 @@ M.open_data = function(tree, node, directory, save_tree, opts)
   end
 end
 
+-- Delete the data file associated with a node.
+--
+-- If it doesn’t exist, does nothing.
+M.delete_data = function(tree, node, save_tree, opts)
+  if (node.data == nil) then
+    notify('no files associated to this node', vim.log.levels.ERROR)
+    return
+  else
+    mind_ui.with_confirmation("Delete file?", function()
+      local file_path = node.data
+      mind_data.delete_data_file(file_path)
+      node.data = nil
+      mind_ui.rerender(tree, opts)
+      save_tree()
+      notify(string.format("file '%s' deleted", file_path), vim.log.levels.INFO)
+    end)
+  end
+end
+
 -- Open the data file associated with a node for the given line.
 --
 -- If it doesn’t exist, create it first.
@@ -175,6 +198,27 @@ end
 M.open_data_cursor = function(tree, directory, save_tree, opts)
   mind_ui.with_cursor(function(line)
     M.open_data_line(tree, line, directory, save_tree, opts)
+  end)
+end
+
+-- Delete the data file associated with a node for the given line.
+--
+-- If it doesn’t exist, create it first.
+M.delete_data_line = function(tree, line, save_tree, opts)
+  local node = mind_node.get_node_by_line(tree, line)
+
+  if (node == nil) then
+    notify('cannot delete data; no node', vim.log.levels.ERROR)
+    return
+  end
+
+  M.delete_data(tree, node, save_tree, opts)
+end
+
+-- Deletes the data file associated with the node under the cursor.
+M.delete_data_cursor = function(tree, save_tree, opts)
+  mind_ui.with_cursor(function(line)
+    M.delete_data_line(tree, line, save_tree, opts)
   end)
 end
 
