@@ -85,17 +85,34 @@ customize how those commands work, have a look at |mind.setup|.
 
     See |mind.open_main| for further information.
 
+`:MindToggleMain`                                                *:MindToggleMain*
+    Toggle the main mind tree. Opens the tree if closed, closes the
+    tree if open.
+
+    See |mind.toggle_main| for further information.
+
 `:MindOpenProject` {global}                                     *:MindOpenProject*
     Open the project tree.
 
     See |mind.open_project| for further information.
 
-`:MindOpenSmartProject`                                         *:MindOpenSmartProject*
+`:MindToggleProject` {global}                                 *:MindToggleProject*
+    Toggle the project tree.
+
+    See |mind.toggle_project| for further information.
+
+
+`:MindOpenSmartProject`                                    *:MindOpenSmartProject*
     Open the project tree, either local, global or prompt the user for which
     kind of project tree to create.
 
     See |mind.open_smart_project| for further information.
 
+`:MindToggleSmartProject`                                *:MindToggleSmartProject*
+    Toggle the project tree, either local, global or prompt the user for which
+    kind of project tree to create.
+
+    See |mind.toggle_smart_project| for further information.
 
 `:MindReloadState`                                              *:MindReloadState*
     Reload Mind state for global and local trees.
@@ -106,6 +123,7 @@ customize how those commands work, have a look at |mind.setup|.
     Close project or main mind tree if open. Resets ui cache.
 
     See |mind.close| for further information.
+
                                                                   *mind-lua-api*
 Lua API~
 
@@ -150,6 +168,9 @@ Arguments:~
     for its state and |mind-config-persistence.data_dir| for any data
     associated with its nodes.
 
+`mind.toggle_main(``)`                                            *mind.toggle_main*
+    Toggle main mind tree.
+
 `mind.open_project(`{use_global}`)`                              *mind.open_project*
     Open the project Mind tree.
 
@@ -168,6 +189,15 @@ Arguments:~
     When working with a local tree, its data paths will always be relative to
     the |current-directory|, so that sharing such trees is easy (for instance,
     checking them in versionning systems like Git).
+
+Arguments:~
+    {global} Optional. `true` for a global project true, `false` or `nil`
+             otherwise.
+
+`mind.toggle_project(`{use_global}`)`                          *mind.toggle_project*
+    Toggle main mind tree.
+
+    See |mind.open_project|.
 
 Arguments:~
     {global} Optional. `true` for a global project true, `false` or `nil`
