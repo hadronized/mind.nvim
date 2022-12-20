@@ -221,7 +221,9 @@ M.open_window = function(opts)
 
     -- window
     vim.api.nvim_exec("vsp", false)
-    vim.api.nvim_exec("wincmd H", false)
+    if opts.ui.open_direction == 'left' then
+        vim.api.nvim_exec("wincmd H", false)
+    end
     vim.api.nvim_win_set_width(0, opts.ui.width)
     vim.api.nvim_win_set_buf(0, bufnr)
     vim.api.nvim_win_set_option(0, 'nu', false)
