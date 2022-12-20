@@ -732,11 +732,13 @@ Default:~
 Default:~
     `width = 30`
 
-`ui.close_on_file_open`                        *mind-config-ui.close_on_file_open*
-    If `true` closes the mind window when a file is opened.
+`ui.open_direction`                                *mind-config-ui.open_direction*
+    Opening direction of the tree view window.
+
+    Can be either `'left'` or `'right`
 
 Default:~
-    `close_on_file_open = false`
+    `open_direction = 'left'`
 
 `ui.root_marker`                                      *mind-config-ui.root_marker*
     Marker used to identify the root of the tree (left to its name).
