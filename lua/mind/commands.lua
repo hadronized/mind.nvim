@@ -761,6 +761,17 @@ M.close = function()
   mind_ui.render_cache = {}
 end
 
+-- Toggle the tree
+M.toggle = function(get_tree, data_dir, save_tree, opts)
+  if mind_ui.render_cache and mind_ui.render_cache.bufnr then
+    -- close the buffer if open
+    M.close()
+  else
+    -- open the buffer if closed
+    M.open_tree(get_tree, data_dir, save_tree, opts)
+  end
+end
+
 -- Precompute commands.
 --
 -- This function will scan the keymaps and will replace the command name with the real command function, if the command
