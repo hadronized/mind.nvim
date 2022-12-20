@@ -19,6 +19,16 @@ local function create_user_commands()
   )
 
   vim.api.nvim_create_user_command(
+    'MindToggleMain',
+    function()
+      require'mind'.toggle_main()
+    end,
+    {
+      desc = 'Toggle main or project Mind tree',
+    }
+  )
+
+  vim.api.nvim_create_user_command(
     'MindOpenProject',
     function(opts)
       require'mind'.open_project(opts.fargs[1] == 'global')
@@ -30,12 +40,33 @@ local function create_user_commands()
   )
 
   vim.api.nvim_create_user_command(
+    'MindToggleProject',
+    function(opts)
+      require'mind'.toggle_project(opts.fargs[1] == 'global')
+    end,
+    {
+      nargs = '?',
+      desc = 'Toggle the project Mind tree',
+    }
+  )
+
+  vim.api.nvim_create_user_command(
     'MindOpenSmartProject',
     function()
       require'mind'.open_smart_project()
     end,
     {
       desc = 'Open the project Mind tree',
+    }
+  )
+
+  vim.api.nvim_create_user_command(
+    'MindToggleSmartProject',
+    function()
+      require'mind'.toggle_smart_project()
+    end,
+    {
+      desc = 'Toggle the project Mind tree',
     }
   )
 
@@ -97,6 +128,21 @@ M.open_main = function()
   )
 end
 
+-- Toggle the main tree view.
+M.toggle_main = function()
+  M.wrap_main_tree_fn(
+    function(args)
+      mind_commands.toggle(
+        args.get_tree,
+        args.opts.persistence.data_dir,
+        function() mind_state.save_main_state(args.opts) end,
+        args.opts
+      )
+    end,
+    M.opts
+  )
+end
+
 -- Open a project tree.
 --
 -- If `use_global` is set to `true`, will use the global persistence location.
@@ -117,11 +163,46 @@ M.open_project = function(use_global)
   )
 end
 
+-- Toggle a project tree view.
+M.toggle_project = function(use_global)
+  M.wrap_project_tree_fn(
+    function(args)
+      mind_commands.toggle(
+        args.get_tree,
+        args.data_dir,
+        use_global
+          and function() mind_state.save_main_state(args.opts) end
+          or function() mind_state.save_local_state() end,
+        args.opts
+      )
+    end,
+    use_global,
+    M.opts
+  )
+end
+
 -- Open a smart project tree.
 M.open_smart_project = function()
   M.wrap_smart_project_tree_fn(
     function(args, use_global)
       mind_commands.open_tree(
+        args.get_tree,
+        args.data_dir,
+        use_global
+          and function() mind_state.save_main_state(args.opts) end
+          or function() mind_state.save_local_state() end,
+        args.opts
+      )
+    end,
+    M.opts
+  )
+end
+
+-- Toggle a smart project tree view.
+M.toggle_smart_project = function()
+  M.wrap_smart_project_tree_fn(
+    function(args, use_global)
+      mind_commands.toggle(
         args.get_tree,
         args.data_dir,
         use_global
