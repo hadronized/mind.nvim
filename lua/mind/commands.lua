@@ -656,7 +656,6 @@ M.move_node_selected_line = function(tree, line, dir, save_tree, opts)
     notify('cannot move; no selected node', vim.log.levels.ERROR)
     M.unselect_node()
     mind_ui.rerender(tree, opts)
-    save_tree()
     return
   end
 
