@@ -40,7 +40,7 @@ return {
 
     -- automatically create data file when trying to open one that doesn’t
     -- have any data yet
-    automatic_data_creation = true,
+    automatic_data_creation = false,
   },
 
   -- UI options
@@ -64,7 +64,7 @@ return {
     local_marker = 'local',
 
     -- marker used to show that a node has an associated data file
-    data_marker = '',
+    data_marker = ' ',
 
     -- marker used to show that a node has an URL
     url_marker = ' ',
@@ -93,13 +93,13 @@ return {
       local_marker = 'Comment',
 
       -- highlight used on the data marker
-      data_marker = 'Grey',
+      data_marker = 'Comment',
 
       -- highlight used on the url marker
-      url_marker = 'Label',
+      url_marker = 'Comment',
 
       -- highlight used on empty nodes (i.e. no children and no data)
-      modifier_empty = 'Grey',
+      modifier_empty = 'Comment',
 
       -- highlight used on the selection marker
       select_marker = 'Error',
@@ -152,6 +152,7 @@ return {
       l = 'copy_node_link',
       L = 'copy_node_link_index',
       d = 'delete',
+      D = 'delete_file',
       O = 'add_above',
       o = 'add_below',
       q = 'quit',

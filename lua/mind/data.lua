@@ -39,4 +39,10 @@ M.new_data_file = function(dir, name, extension, content, should_expand)
   return file_path
 end
 
+-- Deletes the given file.
+M.delete_data_file = function(file_path)
+  os.remove(file_path)
+end
+
+
 return M
