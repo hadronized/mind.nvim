@@ -207,7 +207,7 @@ end
 
 -- Delete the data file associated with a node for the given line.
 --
--- If it doesn’t exist, create it first.
+-- If it doesn’t exist, does nothing.
 M.delete_data_line = function(tree, line, save_tree, opts)
   local node = mind_node.get_node_by_line(tree, line)
 
