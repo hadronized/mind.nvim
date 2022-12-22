@@ -51,6 +51,9 @@ return {
     -- default width of the tree view window
     width = 30,
 
+    -- should mind window be closed when a file is opened
+    close_on_file_open = false,
+
     -- marker used for empty indentation
     empty_indent_marker = '│',
 
