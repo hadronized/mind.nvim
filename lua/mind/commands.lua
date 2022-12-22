@@ -159,6 +159,10 @@ M.open_data = function(tree, node, directory, save_tree, opts)
     vim.api.nvim_set_current_win(winnr)
     vim.api.nvim_exec('e ' .. data, false)
   end
+
+    if opts.ui.close_on_file_open == true then
+        M.close()
+    end
 end
 
 -- Delete the data file associated with a node.
