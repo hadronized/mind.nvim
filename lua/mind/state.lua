@@ -26,11 +26,32 @@ M.get_project_tree = function(cwd)
   end
 end
 
+M.new_main_tree = function(opts)
+  notify('creating a new main tree')
+  -- Global state.
+  M.state = {
+    -- Main tree, used when no specific project is wanted.
+    tree = {
+      uid = vim.fn.strftime('%Y%m%d%H%M%S'),
+      version = require'mind.version'.current_version,
+      contents = {
+        { text = 'Main' },
+      },
+      type = mind_node.TreeType.ROOT,
+      icon = opts.ui.root_marker,
+    },
+
+    -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
+    projects = {},
+  }
+end
+
 M.new_global_project_tree = function(cwd, opts)
   notify('creating a new global project tree')
 
   local tree = {
     uid = vim.fn.strftime('%Y%m%d%H%M%S'),
+    version = require'mind.version'.current_version,
     contents = {
       { text = cwd:match('^.*/(.+)$') },
     },
@@ -48,6 +69,7 @@ M.new_local_tree = function(cwd, opts)
 
   M.local_tree = {
     uid = vim.fn.strftime('%Y%m%d%H%M%S'),
+    version = require'mind.version'.current_version,
     contents = {
       { text = cwd:match('^.*/(.+)$') },
     },
@@ -60,22 +82,6 @@ end
 
 -- Load the main state.
 M.load_main_state = function(opts)
-  -- Global state.
-  M.state = {
-    -- Main tree, used when no specific project is wanted.
-    tree = {
-      uid = vim.fn.strftime('%Y%m%d%H%M%S'),
-      contents = {
-        { text = 'Main' },
-      },
-      type = mind_node.TreeType.ROOT,
-      icon = opts.ui.root_marker,
-    },
-
-    -- Per-project trees; this is a map from the CWD of projects to the actual tree for that project.
-    projects = {},
-  }
-
   if (opts.persistence.state_path == nil) then
     notify('cannot load shit', vim.log.levels.ERROR)
     return
@@ -90,6 +96,8 @@ M.load_main_state = function(opts)
     if (encoded ~= nil) then
       M.state = vim.json.decode(encoded)
     end
+  else
+    M.new_main_tree(opts)
   end
 
   -- ensure we have a UID

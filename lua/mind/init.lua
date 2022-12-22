@@ -153,6 +153,10 @@ M.wrap_main_tree_fn = function(f, opts)
     opts = opts,
   }
 
+  if not require'mind.version'.check_or_update(args.get_tree(), args.save_tree) then
+    return;
+  end
+
   f(args)
 end
 
@@ -189,6 +193,10 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
     opts = opts
   }
 
+  if not require'mind.version'.check_or_update(args.get_tree(), args.save_tree) then
+    return;
+  end
+
   f(args)
 end
 
@@ -212,6 +220,10 @@ M.wrap_smart_project_tree_fn = function(f, opts)
       opts = opts,
     }
 
+    if not require'mind.version'.check_or_update(args.get_tree(), args.save_tree) then
+      return;
+    end
+
     f(args, false)
   else
     -- otherwise, try to open a global project
@@ -227,6 +239,10 @@ M.wrap_smart_project_tree_fn = function(f, opts)
         save_tree = function() mind_state.save_main_state(opts) end,
         opts = opts,
       }
+
+      if not require'mind.version'.check_or_update(args.get_tree(), args.save_tree) then
+        return;
+      end
 
       f(args, true)
     else
@@ -259,6 +275,10 @@ M.wrap_smart_project_tree_fn = function(f, opts)
           save_tree = save_tree,
           opts = opts,
         }
+
+        if not require'mind.version'.check_or_update(args.get_tree(), args.save_tree) then
+          return;
+        end
 
         f(args, true)
         save_tree()
