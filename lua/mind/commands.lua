@@ -729,13 +729,12 @@ M.open_tree = function(get_tree, data_dir, save_tree, opts)
   local bufnr = mind_ui.open_window(opts)
 
   -- ensure that we close the tree if the window gets closed
-  local id
-  id = vim.api.nvim_create_autocmd(
+  vim.api.nvim_create_autocmd(
     { 'WinClosed' },
     {
       buffer = bufnr,
-      callback = function()
-        vim.api.nvim_del_autocmd(id)
+      callback = function(opts)
+        vim.api.nvim_del_autocmd(opts.id)
         M.close()
       end
     }
