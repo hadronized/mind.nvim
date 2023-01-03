@@ -64,11 +64,11 @@ M.commands = {
   end,
 
   copy_node_link = function(args)
-    M.copy_node_link_cursor(args.get_tree(), nil, args.opts)
+    M.copy_node_link_cursor(args.get_tree(),  args.opts)
   end,
 
   copy_node_link_index = function(args)
-    M.copy_node_link_index(args.get_tree(), nil, args.opts)
+    M.copy_node_link_index(args.get_tree(),  args.opts)
   end,
 
   make_url = function(args)
@@ -247,32 +247,30 @@ end
 --
 -- If the node is a data node, get the path of the associated data file.
 -- If the node is a URL node, get the URL.
---
--- If `reg` is omitted, the link is copied to the "" register.
-M.copy_node_link = function(node, reg, opts)
+M.copy_node_link = function(node, opts)
   local link = node.data or node.url
 
   if link ~= nil then
     notify('link was copied')
-    vim.fn.setreg(reg or '"', string.format(opts.edit.copy_link_format or '%s', link))
+    vim.fn.setreg(opts.edit.copy_link_register, string.format(opts.edit.copy_link_format or '%s', link))
   end
 end
 
 -- Get the “link” of a node on the given line.
-M.copy_node_link_line = function(tree, line, reg, opts)
+M.copy_node_link_line = function(tree, line, opts)
   local node = mind_node.get_node_by_line(tree, line)
-  M.copy_node_link(node, reg, opts)
+  M.copy_node_link(node, opts)
 end
 
 -- Get the “link” of a node under the cursor.
-M.copy_node_link_cursor = function(tree, reg, opts)
+M.copy_node_link_cursor = function(tree, opts)
   mind_ui.with_cursor(function(line)
-    M.copy_node_link_line(tree, line, reg, opts)
+    M.copy_node_link_line(tree, line,  opts)
   end)
 end
 
 -- Get the “link” of a node by doing an index search.
-M.copy_node_link_index = function(tree, reg, opts)
+M.copy_node_link_index = function(tree, opts)
   mind_indexing.search_index(
     tree,
     'Get a node link',
@@ -282,7 +280,7 @@ M.copy_node_link_index = function(tree, reg, opts)
     end,
     -- sink function
     function(item)
-      M.copy_node_link(item.node, reg, opts)
+      M.copy_node_link(item.node, opts)
     end,
     opts
   )
