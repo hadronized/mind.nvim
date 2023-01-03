@@ -690,6 +690,13 @@ Default:~
 Default:~
     copy_link_format = "[](%s)"
 
+`edit.copy_link_register`                    *mind-config-edit.copy_link_register*
+    Register to copy the link in.
+
+    The link is by default copied into the `"` register.
+
+Default:~
+    copy_link_register = '"'
                                                               *mind-config-tree*
 The `tree` section groups configuration options about tree behaviors and
 setup.
