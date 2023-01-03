@@ -30,7 +30,10 @@ return {
     data_header = '# %s',
 
     -- format string for copied links
-    copy_link_format = '[](%s)'
+    copy_link_format = '[](%s)',
+
+    -- default register to copy link in
+    copy_link_register = '"'
   },
 
   -- tree options
