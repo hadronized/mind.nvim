@@ -773,7 +773,7 @@ M.precompute_commands = function()
       if (cmd ~= nil) then
         mind_keymap.keymaps.normal[key] = cmd
       end
-    else
+    elseif c == false then
       -- remove the command otherwise (useful if the user set it to false, for instance)
       mind_keymap.keymaps.normal[key] = nil
     end
@@ -786,7 +786,7 @@ M.precompute_commands = function()
       if (cmd ~= nil) then
         mind_keymap.keymaps.selection[key] = cmd
       end
-    else
+    elseif c == false then
       -- remove the command otherwise (useful if the user set it to false, for instance)
       mind_keymap.keymaps.selection[key] = nil
     end
