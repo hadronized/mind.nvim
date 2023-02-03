@@ -319,6 +319,7 @@ end
 
 -- Add a node as child of another node.
 M.create_node = function(tree, grand_parent, parent, node, dir, opts)
+  mind_node.set_icon(node, opts.ui.default_icon)
   if (dir == mind_node.MoveDir.INSIDE_START) then
     mind_node.insert_node(parent, 1, node)
   elseif (dir == mind_node.MoveDir.INSIDE_END) then
@@ -438,11 +439,7 @@ end
 -- Change the icon of a node.
 M.change_icon = function(tree, node, save_tree, opts)
   mind_ui.with_input('Change icon: ', node.icon, function(input)
-    if input == ' ' then
-      input = nil
-    end
-
-    node.icon = input
+    mind_node.set_icon(node, input)
     mind_ui.rerender(tree, opts)
     save_tree()
   end)
@@ -475,11 +472,9 @@ M.change_icon_menu = function(tree, node, save_tree, opts)
       format_item = format_item
     },
     function(item)
-      if item ~= nil then
-        node.icon = item[1]
-        save_tree()
-        mind_ui.rerender(tree, opts)
-      end
+      mind_node.set_icon(node, item[1])
+      save_tree()
+      mind_ui.rerender(tree, opts)
     end
   )
 end

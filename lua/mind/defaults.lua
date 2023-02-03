@@ -123,7 +123,11 @@ return {
       { ' ', 'Monitoring' },
       { ' ', 'Internet, Earth, everyone!' },
       { ' ', 'Frozen, on-hold' },
-    }
+      { '  ', 'None' },
+    },
+
+    -- default icon for new nodes
+    default_icon = nil
   },
 
   -- default keymaps; see 'mind.commands' for a list of commands that can be mapped to keys here

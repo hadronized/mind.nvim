@@ -790,7 +790,14 @@ Default:~
       { " ", "Monitoring" },
       { " ", "Internet, Earth, everyone!" },
       { " ", "Frozen, on-hold" },
+      { "  ", "None" },
     }
+
+`ui.default_icon`                                  *mind-config-ui.default_icon*
+    Default icon to add to new nodes.
+
+Default:~
+    `default_icon = nil`
 
                                                       *mind-config-ui-highlight*
 The `ui.highlight` sub-section is used to change the highlighting mechanism of

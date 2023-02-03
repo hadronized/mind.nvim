@@ -217,4 +217,13 @@ M.move_source_target_same_tree = function(tree, src, tgt)
   end
 end
 
+-- Set an icon for the node.
+M.set_icon = function(node, icon)
+  if icon == nil or icon:match("%S") == nil then
+    node.icon = nil
+  else
+    node.icon = icon
+  end
+end
+
 return M
