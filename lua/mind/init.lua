@@ -1,11 +1,11 @@
-local mind_commands = require 'mind.commands'
-local mind_highlight = require 'mind.highlight'
-local mind_keymap = require 'mind.keymap'
-local mind_node = require 'mind.node'
-local mind_state = require 'mind.state'
-local mind_ui = require 'mind.ui'
-local notify = require 'mind.notify'.notify
-local path = require 'plenary.path'
+local mind_commands = require'mind.commands'
+local mind_highlight = require'mind.highlight'
+local mind_keymap = require'mind.keymap'
+local mind_node = require'mind.node'
+local mind_state = require'mind.state'
+local mind_ui = require'mind.ui'
+local notify = require'mind.notify'.notify
+local path = require'plenary.path'
 
 local M = {}
 
@@ -29,7 +29,7 @@ local function create_user_commands()
   vim.api.nvim_create_user_command(
     'MindOpenMain',
     function()
-      require 'mind'.open_main()
+      require'mind'.open_main()
     end,
     { desc = 'Open the main Mind tree', }
   )
@@ -37,7 +37,7 @@ local function create_user_commands()
   vim.api.nvim_create_user_command(
     'MindOpenProject',
     function(opts)
-      require 'mind'.open_project(opts.fargs[1] == 'global')
+      require'mind'.open_project(opts.fargs[1] == 'global')
     end,
     {
       nargs = '?',
@@ -48,7 +48,7 @@ local function create_user_commands()
   vim.api.nvim_create_user_command(
     'MindOpenSmartProject',
     function()
-      require 'mind'.open_smart_project()
+      require'mind'.open_smart_project()
     end,
     {
       desc = 'Open the project Mind tree',
@@ -58,7 +58,7 @@ local function create_user_commands()
   vim.api.nvim_create_user_command(
     'MindReloadState',
     function()
-      require 'mind'.reload_state()
+      require'mind'.reload_state()
     end,
     {
       desc = 'Reload Mind internal state',
@@ -68,7 +68,7 @@ local function create_user_commands()
   vim.api.nvim_create_user_command(
     'MindClose',
     function(opts)
-      require 'mind'.close()
+      require'mind'.close()
     end,
     {
       desc = 'Close main or project Mind tree if open',
@@ -77,7 +77,7 @@ local function create_user_commands()
 end
 
 M.setup = function(opts)
-  M.opts = vim.tbl_deep_extend('force', require 'mind.defaults', opts or {})
+  M.opts = vim.tbl_deep_extend('force', require'mind.defaults', opts or {})
 
   -- ensure the paths are expanded
   mind_state.expand_opts_paths(M.opts)
@@ -123,8 +123,8 @@ M.open_project = function(use_global)
         args.get_tree,
         args.data_dir,
         use_global
-        and function() mind_state.save_main_state(args.opts) end
-        or function() mind_state.save_local_state() end,
+          and function() mind_state.save_main_state(args.opts) end
+          or function() mind_state.save_local_state() end,
         args.opts
       )
     end,
@@ -141,8 +141,8 @@ M.open_smart_project = function()
         args.get_tree,
         args.data_dir,
         use_global
-        and function() mind_state.save_main_state(args.opts) end
-        or function() mind_state.save_local_state() end,
+          and function() mind_state.save_main_state(args.opts) end
+          or function() mind_state.save_local_state() end,
         args.opts
       )
     end,
@@ -182,7 +182,7 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   if use_global then
     mind_state.load_main_state(opts)
 
-    if mind_state.state.projects[cwd] == nil then
+    if mind_state.state.projects[cwd]== nil then
       mind_state.new_global_project_tree(cwd, opts)
     end
   else
@@ -195,8 +195,8 @@ M.wrap_project_tree_fn = function(f, use_global, opts)
   end
 
   local save_tree =
-      use_global and function() mind_state.save_main_state(opts) end
-      or function() mind_state.save_local_state() end
+    use_global and function() mind_state.save_main_state(opts) end
+    or function() mind_state.save_local_state() end
 
   local args = {
     get_tree = function() return mind_state.get_project_tree(use_global and cwd or nil) end,
