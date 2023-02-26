@@ -85,6 +85,9 @@ customize how those commands work, have a look at |mind.setup|.
 
     See |mind.open_main| for further information.
 
+:MindToggleMain                                                :MindToggleMain
+    Open the main Mind tree if closed, close it if open.
+
 `:MindOpenProject` {global}                                     *:MindOpenProject*
     Open the project tree.
 
