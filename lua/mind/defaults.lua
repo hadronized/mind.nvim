@@ -60,6 +60,12 @@ return {
     -- marker used for node indentation
     node_indent_marker = '└',
 
+    -- marker used when node has children and is expanded
+    node_expanded_marker = '',
+
+    -- marker used when node has children and is not expanded
+    node_unexpanded_marker = '',
+
     -- marker used to identify the root of the tree (left to its name)
     root_marker = ' ',
 

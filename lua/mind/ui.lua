@@ -135,8 +135,8 @@ local function render_node(node, indent, is_last, lines, hls, opts)
 
   if (node.children ~= nil) then
     if (node.is_expanded) then
-      local mark = ' '
-      local hl_col_end = hl_col_start + #mark
+      local marker = opts.ui.node_expanded_marker .. ' '
+      local hl_col_end = hl_col_start + #marker
 
       hls[#hls + 1] = {
         group = 'MindOpenMarker',
@@ -145,7 +145,7 @@ local function render_node(node, indent, is_last, lines, hls, opts)
         col_end = hl_col_end
       }
 
-      lines[#lines + 1] = line .. mark .. name
+      lines[#lines + 1] = line .. marker .. name
 
       for _, hl in ipairs(partial_hls) do
         hl_col_start = hl_col_end
@@ -165,8 +165,8 @@ local function render_node(node, indent, is_last, lines, hls, opts)
       end
       render_node(node.children[#node.children], indent, true, lines, hls, opts)
     else
-      local mark = ' '
-      local hl_col_end = hl_col_start + #mark
+      local marker = opts.ui.node_unexpanded_marker .. ' '
+      local hl_col_end = hl_col_start + #marker
 
       hls[#hls + 1] = {
         group = 'MindClosedMarker',
@@ -175,7 +175,7 @@ local function render_node(node, indent, is_last, lines, hls, opts)
         col_end = hl_col_end
       }
 
-      lines[#lines + 1] = line .. mark .. name
+      lines[#lines + 1] = line .. marker .. name
 
       for _, hl in ipairs(partial_hls) do
         hl_col_start = hl_col_end

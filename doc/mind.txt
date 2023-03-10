@@ -738,6 +738,30 @@ Default:~
 Default:~
     `close_on_file_open = false`
 
+`ui.empty_indent_marker`                       *mind-config-ui.empty_indent_marker*
+    Marker used for empty indentation.
+
+Default:~
+    `empty_indent_marker = "│"`
+
+`ui.node_indent_marker`                        *mind-config-ui.node_indent_marker*
+    Marker used for node indentation.
+
+Default:~
+    `node_indent_marker = '└'`
+
+`ui.node_expanded_marker`                     *mind-config-ui.node_expanded_marker*
+    Marker used when node has children and is expanded.
+
+Default:~
+    `node_expanded_marker = ''`
+
+`ui.node_unexpanded_marker`                 *mind-config-ui.node_unexpanded_marker*
+    Marker used when node has children and is not expanded.
+
+Default:~
+    `node_unexpanded_marker = ''`
+
 `ui.root_marker`                                      *mind-config-ui.root_marker*
     Marker used to identify the root of the tree (left to its name).
 
