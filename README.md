@@ -1,3 +1,11 @@
+# Deprecation and archive notice
+
+This project is now deprecated. I decided that having so many great features in a single editor is not the right way to
+write software, and I wanted to do something different outside of Neovim. There are many other Neovim Lua plugin 
+alternatives out there.
+
+Thanks for having used `mind.nvim`!
+
 <h1 align="center">mind.nvim</h1>
 
 <p align="center">
@@ -12,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="#installation">Install</a> · <a href="https://github.com/phaazon/mind.nvim/wiki">Wiki</a> · <a href="https://github.com/phaazon/mind.nvim/wiki/Screenshots">Screenshots</a>
+  <a href="#installation">Install</a>
 </p>
 
 This plugin is a new take on note taking and task workflows. The idea is derived from using several famous plugins, such
